@@ -11,14 +11,15 @@ use Slim\Routing\RouteCollectorProxy;
 
 
 require __DIR__ . '/../vendor/autoload.php';
-require "../src/entidades/usuario.php";
+require "../src/entidades/empleadoController.php";
 require "../src/entidades/productoController.php";
-require "../src/entidades/mesa.php";
-require "../src/entidades/pedido.php";
+require "../src/entidades/mesaController.php";
+require "../src/entidades/pedidoController.php";
 
 // Instantiate App
 $app = AppFactory::create();
-$app->setBasePath('/slim-php-deployment/app');
+//$app->setBasePath('/slim-php-deployment/app');
+//$app->setBasePath('/app');
 // Add error middleware
 $app->addErrorMiddleware(true, true, true);
 
@@ -37,13 +38,13 @@ $app->group('/producto', function (RouteCollectorProxy $group){
 });
 
 $app->group('/mesa',function(RouteCollectorProxy $group){
-    $group->get('/',\Mesa::class.":TraerTodos");
-    $group->post('/alta',\Mesa::class.":CargarUno");
-});
+    $group->get('/',\MesaController::class.":TraerTodos");//->add(\MW::class.":VerificarSocio")
+    $group->post('/alta',\MesaController::class.":CargarUno");
+});//->add(\MW::class.":VerificarSocio");
 
 $app->group('/pedido',function(RouteCollectorProxy $group){
-    $group->get('/',\Pedido::class.":TraerTodos");
-    $group->post('/alta',\Pedido::class.":CargarUno");
+    $group->get('/',\PedidoController::class.":TraerTodos");
+    $group->post('/alta',\PedidoController::class.":CargarUno");
 });
 
 

@@ -1,22 +1,26 @@
 <?php
-include_once __DIR__."/../db/accesoDatos.php";
-include_once "trabajador.php";
-
-class Socio extends Trabajador{
+class Empleado{
+    
+    public $id;
+    public $nombre;
+    public $email;
+    public $clave;
+    public $rol;
     
     public static function ObtenerTodos(){
         $db = AccesoDatos::ObjetoInstancia();
-        $consulta = $db->prepararConsulta("SELECT id, nombre, email, clave FROM socios");
+        $consulta = $db->prepararConsulta("SELECT id, nombre, email, clave FROM empleados");
         $consulta->execute();
-        return $consulta->fetchAll(PDO::FETCH_CLASS, "Socio");
+        return $consulta->fetchAll(PDO::FETCH_CLASS, "Empleado");
     }
 
     public function Insertar(){
         $db = AccesoDatos::ObjetoInstancia();
-        $consulta = $db->prepararConsulta("INSERT INTO socios ( nombre, email, clave) VALUES (:nombre, :email, :clave)");
+        $consulta = $db->prepararConsulta("INSERT INTO empleados ( nombre, email, clave, rol) VALUES (:nombre, :email, :clave, :rol)");
         $consulta->bindValue(":nombre", $this->nombre, PDO::PARAM_STR);
         $consulta->bindValue(":email", $this->email, PDO::PARAM_STR);
         $consulta->bindValue(":clave", $this->clave, PDO::PARAM_STR);
+        $consulta->bindValue(":rol", $this->rol, PDO::PARAM_STR);
         $consulta->execute();
         return $db->obtenerUltimoId();
     }

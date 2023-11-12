@@ -17,65 +17,6 @@ class Pedido implements IPdoUsable{
     public $estado_individual;
     public $estado_general;
 
-    public function TraerTodos($request, $response, $args){
-        $lista = self::ObtenerTodos();
-        if($lista !== false){
-            $payload = json_encode(array('Pedido' => $lista));
-            $response->withStatus(200,"EXITO");
-            $response->getBody()->write($payload);
-        }else{
-            $payload = json_encode(array("Error" => "Error al mostrar la lista"));
-            $response->withStatus(424,"ERROR");
-            $response->getBody()->write($payload);  
-        }
-        return $response->withHeader('Content-Type', 'application/json');
-    }
-    public function CargarUno($request, $response, $args){
-        $parametros = $request->getParsedBody();
-
-        $nombre = $parametros["nombre"];
-        $platoUno = $parametros["platoUno"];
-        $platoDos = $parametros["platoDos"];
-        $platoTres = $parametros["platoTres"];
-        $platoCuatro = $parametros["platoCuatro"];
-
-        $objId = Mesa::IdMesaDisponible();
-
-        if(isset($objId->id)){
-            //MEJORAR
-            $pedido = new Pedido();
-            $pedido->nombre =  $nombre;
-            $pedido->plato_uno = $platoUno;
-            $pedido->plato_dos = $platoDos;
-            $pedido->plato_tres = $platoTres;
-            $pedido->plato_cuatro = $platoCuatro;
-            //MODIFICAR PARA TOMAR EL VALOR MAYOR ENTRE LOS PLATOS
-            $pedido->tiempo_estimado = rand(5,20);
-            //
-            $pedido->fecha_emision = date("d-m-Y h:i:s",time());
-            $pedido->estado_individual = "sin empezar";
-            $pedido->estado_general = "pendiente";
-            $pedido->alfanumerico = (new Mozo())->CodigoCliente();
-            $retorno = $pedido->Insertar();
-
-            if($retorno === 0){
-                $payload = json_encode(array("Error" => "Erro en el alta de pedido"));
-                $response->withStatus(424,"ERROR");
-                $response->getBody()->write($payload);
-            }else{
-                $payload = json_encode(array('Exito' => "El codigo de su pedido es {$pedido->alfanumerico}"));
-                $response->withStatus(200,"EXITO");
-                $response->getBody()->write($payload);
-            }
-        }else{
-            $payload = json_encode(array("Error" => "No existen Mesas disponibles"));
-            $response->withStatus(424,"ERROR");
-            $response->getBody()->write($payload); 
-        }
-
-        return $response->withHeader('Content-Type', 'application/json');
-    }
-
     public static function ObtenerTodos(){
         $db = AccesoDatos::ObjetoInstancia();
         $consulta = $db->prepararConsulta("SELECT alfanumerico, nombre, plato_uno, plato_dos, plato_tres, plato_cuatro, tiempo_estimado, fecha_emision, fecha_entrega, estado_individual, estado_general FROM pedidos");
@@ -99,5 +40,16 @@ class Pedido implements IPdoUsable{
         $consulta->bindValue(":estado_general", $this->estado_general, PDO::PARAM_STR);
         $consulta->execute();
         return $db->obtenerUltimoId();
+    }
+
+    public function CodigoCliente(){
+        $letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        $numeros = "12345678998765432112345678";
+        $array = array();
+        for($i = 0;$i < 5;$i++){
+            $index = rand(0,24);
+            $array[] = $i % 2 === 0 ? $letras[$index] : $numeros[$index];
+        }
+        return implode($array);
     }
 }

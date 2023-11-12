@@ -5,22 +5,8 @@ class ProductoController{
 
     public function TraerTodos($request, $response, $args){
         $tipo = $request->getQueryParams()["tipo"];
-        $lista = array();
-        switch(strtolower($tipo)){
-            case "cerveza":
-                $lista = Producto::ObtenerTodos("cerveza");
-                break;
-            case "comida":
-                $lista = Producto::ObtenerTodos("comida");
-                break;
-            case "coctel":
-                $lista = Producto::ObtenerTodos("coctel");
-                break;
-            default:
-                $lista = false;
-                break;
-        }
-
+        $lista = Producto::ObtenerTodos($tipo);
+        
         if(!is_array($lista)){
             $payload = json_encode(array("Error" => false));
             $response->withStatus(424,"ERROR");

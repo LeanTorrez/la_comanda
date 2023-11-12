@@ -11,7 +11,7 @@ class Producto implements IPdoUsable{
     public $cantidadVendida;
     public $tiempoPreparacion;
     
-    public static function ObtenerTodos($tipo = 1){
+    public static function ObtenerTodos($tipo = "coctel"){
         $db = AccesoDatos::ObjetoInstancia();
         $consulta = $db->prepararConsulta("SELECT id, nombre, tipo, precio, tiempoPreparacion, cantidadVendida FROM productos WHERE tipo = :tipo");
         $consulta->bindValue(":tipo", $tipo);
