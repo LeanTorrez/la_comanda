@@ -38,11 +38,17 @@ $app->group("/usuario",function (RouteCollectorProxy $group){
 $app->group('/producto', function (RouteCollectorProxy $group){  
     $group->post('/alta', \ProductoController::class.":CargarUno");
     $group->get('/',\ProductoController::class.":TraerTodos");
+    $group->get('/{id}',\ProductoController::class . ":TraerUno");
+    $group->delete('/borrar',\ProductoController::class . ":BorrarUno");
+    $group->put('/actualizar', \ProductoController::class . ":ModificarUno");
 });
 
 $app->group('/mesa',function(RouteCollectorProxy $group){
     $group->get('/',\MesaController::class.":TraerTodos");//->add(\MW::class.":VerificarSocio")
+    $group->get('/{id}',\MesaController::class . ":TraerUno");
     $group->post('/alta',\MesaController::class.":CargarUno");
+    $group->delete('/borrar',\MesaController::class . ":BorrarUno");
+    $group->put('/actualizar', \MesaController::class . ":ModificarUno");
 });//->add(\MW::class.":VerificarSocio");
 
 $app->group('/pedido',function(RouteCollectorProxy $group){

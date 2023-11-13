@@ -51,6 +51,33 @@ class Producto implements IPdoUsable{
         return $consulta->fetchAll(PDO::FETCH_CLASS, "Producto");
     }
 
+    public static function ObtenerUno($id){
+        $db = AccesoDatos::ObjetoInstancia();
+        $consulta = $db->prepararConsulta("SELECT id, nombre, tipo, precio, tiempoPreparacion, cantidadVendida FROM productos WHERE id = :id LIMIT 1");
+        $consulta->bindValue(":id", $id, PDO::PARAM_INT);
+        $consulta->execute();
+        return $consulta->fetchAll(PDO::FETCH_CLASS, "Producto");
+    }
+
+    public static function Borrar($id){
+        $db = AccesoDatos::ObjetoInstancia();
+        $consulta = $db->prepararConsulta("DELETE FROM productos WHERE id = :id");
+        $consulta->bindValue(":id", $id, PDO::PARAM_INT);
+        $consulta->execute();
+        return $db->obtenerUltimoId();
+    }
+
+    public function Modificar(){
+        $db = AccesoDatos::ObjetoInstancia();
+        $consulta = $db->prepararConsulta("UPDATE productos SET nombre = :nombre, tipo = :tipo, precio = :precio, tiempoPreparacion = :tiempoPreparacion WHERE id = :id");
+        $consulta->bindValue(":id", $this->id, PDO::PARAM_INT);
+        $consulta->bindValue(":nombre", $this->nombre, PDO::PARAM_STR);
+        $consulta->bindValue(":tipo", $this->tipo, PDO::PARAM_STR);
+        $consulta->bindValue(":precio", $this->precio, PDO::PARAM_STR);
+        $consulta->bindValue(":tiempoPreparacion", $this->tiempoPreparacion, PDO::PARAM_STR);
+        return $consulta->execute();
+    }
+
     public function Insertar(){
         $db = AccesoDatos::ObjetoInstancia();
         $consulta = $db->prepararConsulta("INSERT INTO productos ( nombre, tipo, precio, tiempoPreparacion, cantidadVendida) 

@@ -15,6 +15,59 @@ class MesaController{
         }
         return $response->withHeader('Content-Type', 'application/json');
     }
+
+    public function TraerUno($request, $response, $args){
+        $id = $request->getQueryParams()["id"];
+        $empleado = Mesa::ObtenerUno($id);
+        //si no lo encuentra devuelve array vacio ARREGLAR
+        if(is_array($empleado)){
+            $payload = json_encode(array("Mesa" => $empleado)); 
+            $response->withStatus(200,"Exito");  
+            $response->getBody()->write($payload); 
+        }else{
+            $payload = json_encode(array("Error" => "Id Inexistente"));
+            $response->withStatus(424,"ERROR");
+            $response->getBody()->write($payload);  
+        }
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function BorrarUno($request, $response, $args){
+        $id = $request->getQueryParams()["id"];
+        $retorno = Mesa::Borrar($id);
+        if($retorno !== 0){
+            $payload = json_encode(array("Exito" => "Se elimino la mesa")); 
+            $response->withStatus(200,"Exito");  
+            $response->getBody()->write($payload); 
+        }else{
+            $payload = json_encode(array("Error" => "La mesa no existe"));
+            $response->withStatus(424,"ERROR");
+            $response->getBody()->write($payload);  
+        }
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+   
+    public function ModificarUno($request, $response, $args){
+        $parametros = $request->getParsedBody();
+        $mesa = new Mesa();
+        $mesa->id = $parametros["id"];
+        $mesa->estado = $parametros["estado"];
+        $mesa->id_mozo = $parametros["id_mozo"];
+        $mesa->id_pedido = $parametros["id_pedido"];
+
+        $retorno = $mesa->Modificar();
+
+        if($retorno){
+            $payload = json_encode(array('Exito' => "Se modifico Correctamente"));
+            $response->withStatus(200,"EXITO");
+            $response->getBody()->write($payload); 
+        }else{
+            $payload = json_encode(array("Error" => "Error al modificar"));
+            $response->withStatus(424,"ERROR");
+            $response->getBody()->write($payload); 
+        }
+        return $response->withHeader('Content-Type', 'application/json');
+    }
     
 	public function CargarUno($request, $response, $args){
         $parametros = $request->getParsedBody();

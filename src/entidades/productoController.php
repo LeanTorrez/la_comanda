@@ -18,6 +18,60 @@ class ProductoController{
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    public function TraerUno($request, $response, $args){
+        $id = $request->getQueryParams()["id"];
+        $producto = Producto::ObtenerUno($id);
+        //si no lo encuentra devuelve array vacio ARREGLAR
+        if(is_array($producto)){
+            $payload = json_encode(array("Producto" => $producto)); 
+            $response->withStatus(200,"Exito");  
+            $response->getBody()->write($payload); 
+        }else{
+            $payload = json_encode(array("Error" => "Id Inexistente"));
+            $response->withStatus(424,"ERROR");
+            $response->getBody()->write($payload);  
+        }
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function BorrarUno($request, $response, $args){
+        $id = $request->getQueryParams()["id"];
+        $retorno = Producto::Borrar($id);
+        if($retorno !== 0){
+            $payload = json_encode(array("Exito" => "Se elimino el producto")); 
+            $response->withStatus(200,"Exito");  
+            $response->getBody()->write($payload); 
+        }else{
+            $payload = json_encode(array("Error" => "El producto no existe"));
+            $response->withStatus(424,"ERROR");
+            $response->getBody()->write($payload);  
+        }
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+   
+    public function ModificarUno($request, $response, $args){
+        $parametros = $request->getParsedBody();
+        $producto = new Producto();
+        $producto->id = $parametros["id"];
+        $producto->nombre = $parametros["nombre"];
+        $producto->tipo = $parametros["tipo"];
+        $producto->precio = $parametros["precio"];
+        $producto->tiempoPreparacion = $parametros["tiempoPreparacion"];
+
+        $retorno = $producto->Modificar();
+
+        if($retorno){
+            $payload = json_encode(array('Exito' => "Se Modifico el producto con exito"));
+            $response->withStatus(200,"EXITO");
+            $response->getBody()->write($payload); 
+        }else{
+            $payload = json_encode(array("Error" => "Error al Modificar"));
+            $response->withStatus(424,"ERROR");
+            $response->getBody()->write($payload); 
+        }
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
     public function CargarUno($request, $response, $args){
         $parametros = $request->getParsedBody();
 

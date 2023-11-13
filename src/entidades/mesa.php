@@ -14,6 +14,32 @@ class Mesa implements IPdoUsable{
         return $consulta->fetchAll(PDO::FETCH_CLASS, "Mesa");
     }
 
+    public static function ObtenerUno($id){
+        $db = AccesoDatos::ObjetoInstancia();
+        $consulta = $db->prepararConsulta("SELECT id, estado, id_mozo, id_pedido FROM mesas WHERE id = :id LIMIT 1");
+        $consulta->bindValue(":id", $id, PDO::PARAM_INT);
+        $consulta->execute();
+        return $consulta->fetchAll(PDO::FETCH_CLASS, "Mesa");
+    }
+
+    public static function Borrar($id){
+        $db = AccesoDatos::ObjetoInstancia();
+        $consulta = $db->prepararConsulta("DELETE FROM mesas WHERE id = :id");
+        $consulta->bindValue(":id", $id, PDO::PARAM_INT);
+        $consulta->execute();
+        return $db->obtenerUltimoId();
+    }
+
+    public function Modificar(){
+        $db = AccesoDatos::ObjetoInstancia();
+        $consulta = $db->prepararConsulta("UPDATE mesas SET estado = :estado, id_mozo = :id_mozo, id_pedido = :id_pedido WHERE id = :id");
+        $consulta->bindValue(":id", $this->id, PDO::PARAM_INT);
+        $consulta->bindValue(":estado", $this->estado, PDO::PARAM_STR);
+        $consulta->bindValue(":id_mozo", $this->id_mozo, PDO::PARAM_STR);
+        $consulta->bindValue(":id_pedido", $this->id_pedido, PDO::PARAM_STR);
+        return $consulta->execute();
+    }
+
     public static function IdMesaDisponible(){
         $db = AccesoDatos::ObjetoInstancia();
         $consulta = $db->prepararConsulta("SELECT id FROM mesas WHERE estado = 'disponible' LIMIT 1");
