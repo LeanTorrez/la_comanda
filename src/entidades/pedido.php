@@ -24,6 +24,58 @@ class Pedido implements IPdoUsable{
         return $consulta->fetchAll(PDO::FETCH_CLASS, "Pedido");
     }
 
+    public static function ObtenerTodosRol($rol){
+        $tipo = "";
+        switch($rol){
+            case "cocinero":
+                $tipo = "comida";           
+                break;
+            case "bartender";
+                $tipo = "coctel";
+                break;
+            case "cervecero";
+                $tipo = "cerveza";
+                break;
+        }
+        $lista = self::ObtenerTodosColumnas($tipo,"plato_uno");
+        $lista = self::MergePedidos($lista,self::ObtenerTodosColumnas($tipo,"plato_dos"));
+        $lista = self::MergePedidos($lista,self::ObtenerTodosColumnas($tipo,"plato_tres"));
+        $lista = self::MergePedidos($lista,self::ObtenerTodosColumnas($tipo,"plato_cuatro"));
+        return $lista;
+    }
+
+    private static function MergePedidos($lista, $listaMerge){
+        if($lista !== false && $listaMerge !== false){
+            if(!is_array($lista)){
+                $listaNueva = array($lista);
+                if(is_array($listaMerge)){
+                    array_merge($listaNueva,$listaMerge);
+                }else{
+                    $listaNueva[] = $listaMerge;
+                }
+                return $listaNueva;
+            }else{
+                if(is_array($listaMerge)){
+                    array_merge($lista,$listaMerge);
+                }else{
+                    $lista[] = $listaMerge;
+                }
+            }
+        }else{
+            if($listaMerge !== false){
+                $lista = $listaMerge;
+            }
+        }
+        return $lista;
+    }
+
+    public static function ObtenerTodosColumnas($tipo, $columna){
+        $db = AccesoDatos::ObjetoInstancia();
+        $consulta = $db->prepararConsulta("SELECT alfanumerico, pedidos.nombre, $columna AS plato FROM pedidos INNER JOIN productos ON productos.nombre = $columna WHERE productos.tipo = '$tipo'");
+        $consulta->execute();
+        return $consulta->fetchObject("stdClass");
+    }
+
     public function Insertar(){
         $db = AccesoDatos::ObjetoInstancia();
         $consulta = $db->prepararConsulta("INSERT INTO pedidos ( alfanumerico, nombre, plato_uno, plato_dos, plato_tres, plato_cuatro, tiempo_estimado, fecha_emision, estado_individual, estado_general ) 
@@ -52,4 +104,6 @@ class Pedido implements IPdoUsable{
         }
         return implode($array);
     }
+
+
 }

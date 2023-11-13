@@ -11,6 +11,38 @@ class Producto implements IPdoUsable{
     public $cantidadVendida;
     public $tiempoPreparacion;
     
+    public static function NuevoPedido($arrayPlatos){
+        $retorno = 0;
+        foreach($arrayPlatos as $plato){
+            $retorno = $plato->ActualizarCantidadVendidad();
+            if($retorno === 0){
+                break;
+            }
+        }
+        return $retorno;
+    }
+
+    public static function ObtenerPlatos($platos){
+        $strPlatos = self::ParsePlatos($platos);
+        $db = AccesoDatos::ObjetoInstancia();
+        $consulta = $db->prepararConsulta("SELECT id, nombre, tipo, tiempoPreparacion FROM productos WHERE nombre IN ($platos)");
+        $consulta->execute();
+        return $consulta->fetchAll(PDO::FETCH_CLASS, "Producto");
+    }
+
+    static function ParsePlatos($arrayPlatos){
+        return "'".$arrayPlatos[0]."','".$arrayPlatos[1]."','".$arrayPlatos[2]."','".$arrayPlatos[3]."'";
+    }
+
+    public function ActualizarCantidadVendidad(){
+        $db = AccesoDatos::ObjetoInstancia();
+        $consulta = $db->prepararConsulta("UPDATE productos SET cantidadVendida = cantidadVendida + 1 WHERE id = :id");
+        $consulta->bindValue(":id", $this->id, PDO::PARAM_INT);
+        $consulta->execute();
+        return $db->obtenerUltimoId();
+    }
+
+
     public static function ObtenerTodos($tipo = "coctel"){
         $db = AccesoDatos::ObjetoInstancia();
         $consulta = $db->prepararConsulta("SELECT id, nombre, tipo, precio, tiempoPreparacion, cantidadVendida FROM productos WHERE tipo = :tipo");

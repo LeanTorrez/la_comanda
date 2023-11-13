@@ -29,7 +29,10 @@ $app->addBodyParsingMiddleware();
 // Routes
 $app->group("/usuario",function (RouteCollectorProxy $group){
     $group->get('/',\UsuarioController::class . ":TraerTodos");
+    $group->get('/{id}',\UsuarioController::class . ":TraerUno");
+    $group->delete('/borrar',\UsuarioController::class . ":BorrarUno");
     $group->post('/alta', \UsuarioController::class . ":CargarUno");
+    $group->put('/actualizar', \UsuarioController::class . ":ModificarUno");
 });
 
 $app->group('/producto', function (RouteCollectorProxy $group){  
