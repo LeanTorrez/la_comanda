@@ -1,24 +1,18 @@
 <?php
-include_once __DIR__."/../Interfaces/IApiUsable.php";
-include_once __DIR__."/../db/accesoDatos.php";
-include_once "empleado.php";
+include_once __DIR__."/../entidades/producto.php";
 
-class UsuarioController implements IApiUsable
-{
-    public $_id;
-    public $_nombre;
-    public $_email;
-    public $_clave;
+class ProductoController{
 
-    public function TraerTodos($request, $response, $args)
-    {  
-        $lista = Empleado::ObtenerTodos();
+    public function TraerTodos($request, $response, $args){
+        $tipo = $request->getQueryParams()["tipo"];
+        $lista = Producto::ObtenerTodos($tipo);
+        
         if(!is_array($lista)){
             $payload = json_encode(array("Error" => false));
             $response->withStatus(424,"ERROR");
             $response->getBody()->write($payload);  
         }else{
-            $payload = json_encode(array("empleados" => $lista));
+            $payload = json_encode(array($tipo => $lista));
             $response->getBody()->write($payload);    
         }
         return $response->withHeader('Content-Type', 'application/json');
@@ -26,14 +20,14 @@ class UsuarioController implements IApiUsable
 
     public function TraerUno($request, $response, $args){
         $id = $request->getQueryParams()["id"];
-        $empleado = Empleado::ObtenerUno($id);
+        $producto = Producto::ObtenerUno($id);
         //si no lo encuentra devuelve array vacio ARREGLAR
-        if(is_array($empleado)){
-            $payload = json_encode(array("empleados" => $empleado)); 
+        if(is_array($producto)){
+            $payload = json_encode(array("Producto" => $producto)); 
             $response->withStatus(200,"Exito");  
             $response->getBody()->write($payload); 
         }else{
-            $payload = json_encode(array("Error" => "No se encontre el empleado"));
+            $payload = json_encode(array("Error" => "Id Inexistente"));
             $response->withStatus(424,"ERROR");
             $response->getBody()->write($payload);  
         }
@@ -42,13 +36,13 @@ class UsuarioController implements IApiUsable
 
     public function BorrarUno($request, $response, $args){
         $id = $request->getQueryParams()["id"];
-        $retorno = Empleado::Borrar($id);
+        $retorno = Producto::Borrar($id);
         if($retorno !== 0){
-            $payload = json_encode(array("Exito" => "Se elimino el empleado exitosamente")); 
+            $payload = json_encode(array("Exito" => "Se elimino el producto")); 
             $response->withStatus(200,"Exito");  
             $response->getBody()->write($payload); 
         }else{
-            $payload = json_encode(array("Error" => "No se encontre el empleado"));
+            $payload = json_encode(array("Error" => "El producto no existe"));
             $response->withStatus(424,"ERROR");
             $response->getBody()->write($payload);  
         }
@@ -57,54 +51,54 @@ class UsuarioController implements IApiUsable
    
     public function ModificarUno($request, $response, $args){
         $parametros = $request->getParsedBody();
-        $empleado = new Empleado();
-        $empleado->id = $parametros["id"];
-        $empleado->nombre = $parametros["nombre"];
-        $empleado->clave = $parametros["clave"];
-        $empleado->email = $parametros["email"];
-        $empleado->rol =$parametros["rol"];
+        $producto = new Producto();
+        $producto->id = $parametros["id"];
+        $producto->nombre = $parametros["nombre"];
+        $producto->tipo = $parametros["tipo"];
+        $producto->precio = $parametros["precio"];
+        $producto->tiempoPreparacion = $parametros["tiempoPreparacion"];
 
-        $retorno = $empleado->Modificar();
+        $retorno = $producto->Modificar();
 
         if($retorno){
-            $payload = json_encode(array('Exito' => "Se inserto al usuario Correctamente"));
+            $payload = json_encode(array('Exito' => "Se Modifico el producto con exito"));
             $response->withStatus(200,"EXITO");
             $response->getBody()->write($payload); 
         }else{
-            $payload = json_encode(array("Error" => "Error al intentar Insertar"));
+            $payload = json_encode(array("Error" => "Error al Modificar"));
             $response->withStatus(424,"ERROR");
             $response->getBody()->write($payload); 
         }
         return $response->withHeader('Content-Type', 'application/json');
     }
 
-    public function CargarUno($request, $response, $args)
-    {
+    public function CargarUno($request, $response, $args){
         $parametros = $request->getParsedBody();
 
-        //VERIFICAR PARAMETROS DESPUES
-        $nombre =  $parametros["nombre"];
-        $clave =  $parametros["clave"];
-        $email =  $parametros["email"];
-        $rol = $parametros["rol"];
+        $nombre = $parametros["nombre"];
+        $tipo = $parametros["tipo"];
+        $precio = $parametros["precio"];
+        $tiempoPreparacion = $parametros["tiempoPreparacion"];
 
-        $empleado = new Empleado();
-        $empleado->nombre = $nombre;
-        $empleado->clave = $clave;
-        $empleado->email = $email;
-        $empleado->rol = $rol;
-        $retorno = $empleado->Insertar();
+        $producto = new Producto();
+
+        $producto->nombre = $nombre;
+        $producto->tipo = $tipo;
+        $producto->precio = $precio;
+        $producto->tiempoPreparacion = $tiempoPreparacion;
+        $producto->cantidadVendida = 0;
+
+        $retorno = $producto->Insertar();
 
         if($retorno === 0){
             $payload = json_encode(array("Error" => "Error al intentar Insertar"));
             $response->withStatus(424,"ERROR");
             $response->getBody()->write($payload);  
         }else{
-            $payload = json_encode(array('Exito' => "Se inserto al usuario Correctamente"));
+            $payload = json_encode(array('Exito' => "Se inserto el producto correctamente"));
             $response->withStatus(200,"EXITO");
             $response->getBody()->write($payload);
         }
         return $response->withHeader('Content-Type', 'application/json');
     }
-
 }

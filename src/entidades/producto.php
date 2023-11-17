@@ -22,16 +22,29 @@ class Producto implements IPdoUsable{
         return $retorno;
     }
 
+    public static function ObtenerTiempoMasAlto($arrayProductos){
+        foreach($arrayProductos as $producto){
+            $tiempos[] = $producto->tiempoPreparacion;
+        }
+        return max($tiempos);
+    }
+
     public static function ObtenerPlatos($platos){
         $strPlatos = self::ParsePlatos($platos);
         $db = AccesoDatos::ObjetoInstancia();
-        $consulta = $db->prepararConsulta("SELECT id, nombre, tipo, tiempoPreparacion FROM productos WHERE nombre IN ($platos)");
+        $consulta = $db->prepararConsulta("SELECT id, nombre, tipo, tiempoPreparacion FROM productos WHERE nombre IN ($strPlatos)");
         $consulta->execute();
         return $consulta->fetchAll(PDO::FETCH_CLASS, "Producto");
     }
 
     static function ParsePlatos($arrayPlatos){
-        return "'".$arrayPlatos[0]."','".$arrayPlatos[1]."','".$arrayPlatos[2]."','".$arrayPlatos[3]."'";
+        $str = "'";
+        $contador = 0;
+        foreach($arrayPlatos as $plato){
+            $contador++;
+            $str .= count($arrayPlatos) === $contador ? $plato."'": $plato."','";
+        }
+        return $str;
     }
 
     public function ActualizarCantidadVendidad(){

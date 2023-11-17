@@ -11,10 +11,10 @@ use Slim\Routing\RouteCollectorProxy;
 
 
 require __DIR__ . '/../vendor/autoload.php';
-require "../src/entidades/empleadoController.php";
-require "../src/entidades/productoController.php";
-require "../src/entidades/mesaController.php";
-require "../src/entidades/pedidoController.php";
+require "../src/controllers/empleadoController.php";
+require "../src/controllers/productoController.php";
+require "../src/controllers/mesaController.php";
+require "../src/controllers/pedidoController.php";
 
 // Instantiate App
 $app = AppFactory::create();

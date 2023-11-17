@@ -1,5 +1,5 @@
 <?php
-include_once "mesa.php";
+include_once __DIR__."/../entidades/mesa.php";
 class MesaController{
 
     public function TraerTodos($request, $response, $args){
