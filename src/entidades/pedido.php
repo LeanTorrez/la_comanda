@@ -14,7 +14,7 @@ class Pedido implements IPdoUsable{
     public $fecha_entrega;
 
     public static function FormatoPlatos($lista){
-        
+
         foreach($lista as $pedido){
             $formato = array();
             $parser = explode(",",$pedido->platos);
@@ -26,12 +26,23 @@ class Pedido implements IPdoUsable{
         return $lista;
     }
 
+    public static function Borrar($alfanumerico){
+        $db = AccesoDatos::ObjetoInstancia();
+        $consulta = $db->prepararConsulta("UPDATE pedidos SET es_eliminado = :es_eliminado
+        WHERE alfanumerico = :alfanumerico");
+        $consulta->bindValue(":es_eliminado", 1, PDO::PARAM_INT);
+        $consulta->bindValue(":alfanumerico", $alfanumerico, PDO::PARAM_STR);
+        $consulta->execute();
+        return $db->obtenerUltimoId();
+    }
+
     public static function ObtenerTodos(){
         $db = AccesoDatos::ObjetoInstancia();
         $consulta = $db->prepararConsulta("SELECT pedidos.alfanumerico, pedidos.nombre, 
         (SELECT GROUP_CONCAT(productos_pedidos.nombre_producto) 
         FROM productos_pedidos 
-        WHERE productos_pedidos.alfanumerico = pedidos.alfanumerico ) AS platos, tiempo_estimado, fecha_emision, fecha_entrega FROM pedidos");
+        WHERE productos_pedidos.alfanumerico = pedidos.alfanumerico ) AS platos, tiempo_estimado, fecha_emision, fecha_entrega FROM pedidos
+        WHERE es_eliminado = 0");
         $consulta->execute();
         return $consulta->fetchAll(PDO::FETCH_CLASS, "stdClass");
     }
@@ -41,12 +52,25 @@ class Pedido implements IPdoUsable{
         $consulta = $db->prepararConsulta("SELECT pedidos.alfanumerico, pedidos.nombre, productos_pedidos.nombre_producto AS plato, 
         tiempo_estimado, fecha_emision, fecha_entrega FROM pedidos 
         INNER JOIN productos_pedidos ON productos_pedidos.alfanumerico = pedidos.alfanumerico 
-        WHERE productos_pedidos.tipo_producto = :rol");
+        WHERE productos_pedidos.tipo_producto = :rol AND pedidos.es_eliminado = 0");
         $consulta->bindValue(":rol", $rol, PDO::PARAM_STR);
         $consulta->execute();
         return $consulta->fetchAll(PDO::FETCH_CLASS, "stdClass");
     }
-   
+
+    public static function ObtenerUno($alfanumerico){
+        $db = AccesoDatos::ObjetoInstancia();
+        $consulta = $db->prepararConsulta("SELECT pedidos.alfanumerico, pedidos.nombre, 
+        (SELECT GROUP_CONCAT(productos_pedidos.nombre_producto) 
+        FROM productos_pedidos 
+        WHERE productos_pedidos.alfanumerico = pedidos.alfanumerico ) AS platos, tiempo_estimado, fecha_emision, fecha_entrega 
+        FROM pedidos 
+        WHERE pedidos.alfanumerico = :alfanumerico AND es_eliminado = 0 LIMIT 1" );
+        $consulta->bindValue(":alfanumerico", $alfanumerico, PDO::PARAM_STR);
+        $consulta->execute();
+        return $consulta->fetchAll(PDO::FETCH_CLASS, "stdClass");
+    }
+    
     public function Insertar(){
         $db = AccesoDatos::ObjetoInstancia();
         $consulta = $db->prepararConsulta("INSERT INTO pedidos ( alfanumerico, nombre, mozo_id, tiempo_estimado, fecha_emision ) 
@@ -70,6 +94,4 @@ class Pedido implements IPdoUsable{
         }
         return implode($array);
     }
-
-
 }

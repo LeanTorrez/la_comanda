@@ -9,14 +9,18 @@ class Mesa implements IPdoUsable{
 
     public static function ObtenerTodos(){
         $db = AccesoDatos::ObjetoInstancia();
-        $consulta = $db->prepararConsulta("SELECT id, estado, id_mozo, id_pedido FROM mesas");
+        $consulta = $db->prepararConsulta("SELECT id, estado, id_mozo, id_pedido 
+        FROM mesas
+        WHERE es_eliminado = 0");
         $consulta->execute();
         return $consulta->fetchAll(PDO::FETCH_CLASS, "Mesa");
     }
 
     public static function ObtenerUno($id){
         $db = AccesoDatos::ObjetoInstancia();
-        $consulta = $db->prepararConsulta("SELECT id, estado, id_mozo, id_pedido FROM mesas WHERE id = :id LIMIT 1");
+        $consulta = $db->prepararConsulta("SELECT id, estado, id_mozo, id_pedido 
+        FROM mesas 
+        WHERE id = :id AND es_eliminado = 0 LIMIT 1");
         $consulta->bindValue(":id", $id, PDO::PARAM_INT);
         $consulta->execute();
         return $consulta->fetchAll(PDO::FETCH_CLASS, "Mesa");
@@ -24,7 +28,8 @@ class Mesa implements IPdoUsable{
 
     public static function Borrar($id){
         $db = AccesoDatos::ObjetoInstancia();
-        $consulta = $db->prepararConsulta("DELETE FROM mesas WHERE id = :id");
+        $consulta = $db->prepararConsulta("UPDATE mesas SET es_eliminado = 1
+        WHERE id = :id");
         $consulta->bindValue(":id", $id, PDO::PARAM_INT);
         $consulta->execute();
         return $db->obtenerUltimoId();

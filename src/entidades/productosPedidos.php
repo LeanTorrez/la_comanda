@@ -26,6 +26,16 @@ class ProductoPedido{
         return $retorno;
     }
 
+    public function Modificar(){
+        $db = AccesoDatos::ObjetoInstancia();
+        $consulta = $db->prepararConsulta("UPDATE productos_pedidos SET nombre_producto = :nombre_producto, tipo_producto = :tipo_producto WHERE id = :id AND alfanumerico = :alfanumerico");
+        $consulta->bindValue(":id", $this->id, PDO::PARAM_INT);
+        $consulta->bindValue(":alfanumerico", $this->alfanumerico, PDO::PARAM_STR);
+        $consulta->bindValue(":nombre_producto", $this->nombre_producto, PDO::PARAM_STR);
+        $consulta->bindValue(":tipo_producto", $this->tipo_producto, PDO::PARAM_STR);
+        return $consulta->execute();
+    }
+
     public function Insertar(){
         $db = AccesoDatos::ObjetoInstancia();
         $consulta = $db->prepararConsulta("INSERT INTO productos_pedidos ( alfanumerico, id_producto, tipo_producto, nombre_producto) 

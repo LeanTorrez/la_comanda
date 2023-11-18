@@ -29,6 +29,7 @@ class Producto implements IPdoUsable{
         return max($tiempos);
     }
 
+    //FIJARTE es_eliminado 0
     public static function ObtenerPlatos($platos){
         $strPlatos = self::ParsePlatos($platos);
         $db = AccesoDatos::ObjetoInstancia();
@@ -38,11 +39,15 @@ class Producto implements IPdoUsable{
     }
 
     static function ParsePlatos($arrayPlatos){
-        $str = "'";
-        $contador = 0;
-        foreach($arrayPlatos as $plato){
-            $contador++;
-            $str .= count($arrayPlatos) === $contador ? $plato."'": $plato."','";
+        if(is_array($arrayPlatos)){
+            $str = "'";
+            $contador = 0;
+            foreach($arrayPlatos as $plato){
+                $contador++;
+                $str .= count($arrayPlatos) === $contador ? $plato."'": $plato."','";
+            }
+        }else{
+            $str = $arrayPlatos;
         }
         return $str;
     }
@@ -58,7 +63,9 @@ class Producto implements IPdoUsable{
 
     public static function ObtenerTodos($tipo = "coctel"){
         $db = AccesoDatos::ObjetoInstancia();
-        $consulta = $db->prepararConsulta("SELECT id, nombre, tipo, precio, tiempoPreparacion, cantidadVendida FROM productos WHERE tipo = :tipo");
+        $consulta = $db->prepararConsulta("SELECT id, nombre, tipo, precio, tiempoPreparacion, cantidadVendida 
+        FROM productos 
+        WHERE tipo = :tipo AND es_eliminado = 0");
         $consulta->bindValue(":tipo", $tipo);
         $consulta->execute();
         return $consulta->fetchAll(PDO::FETCH_CLASS, "Producto");
@@ -66,7 +73,9 @@ class Producto implements IPdoUsable{
 
     public static function ObtenerUno($id){
         $db = AccesoDatos::ObjetoInstancia();
-        $consulta = $db->prepararConsulta("SELECT id, nombre, tipo, precio, tiempoPreparacion, cantidadVendida FROM productos WHERE id = :id LIMIT 1");
+        $consulta = $db->prepararConsulta("SELECT id, nombre, tipo, precio, tiempoPreparacion, cantidadVendida
+        FROM productos 
+        WHERE id = :id AND es_eliminado = 0 LIMIT 1");
         $consulta->bindValue(":id", $id, PDO::PARAM_INT);
         $consulta->execute();
         return $consulta->fetchAll(PDO::FETCH_CLASS, "Producto");
@@ -74,7 +83,8 @@ class Producto implements IPdoUsable{
 
     public static function Borrar($id){
         $db = AccesoDatos::ObjetoInstancia();
-        $consulta = $db->prepararConsulta("DELETE FROM productos WHERE id = :id");
+        $consulta = $db->prepararConsulta("UPDATE productos SET es_eliminado = 1
+        WHERE id = :id");
         $consulta->bindValue(":id", $id, PDO::PARAM_INT);
         $consulta->execute();
         return $db->obtenerUltimoId();

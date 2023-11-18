@@ -53,6 +53,9 @@ $app->group('/mesa',function(RouteCollectorProxy $group){
 
 $app->group('/pedido',function(RouteCollectorProxy $group){
     $group->get('/',\PedidoController::class.":TraerTodos");
+    $group->get('/{id}',\PedidoController::class.":TraerUno");
+    $group->put('/actualizar', \PedidoController::class . ":ModificarUno");
+    $group->delete('/borrar',\PedidoController::class . ":BorrarUno");
     $group->post('/alta',\PedidoController::class.":CargarUno");
 });
 

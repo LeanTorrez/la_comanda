@@ -9,14 +9,17 @@ class Empleado{
     
     public static function ObtenerTodos(){
         $db = AccesoDatos::ObjetoInstancia();
-        $consulta = $db->prepararConsulta("SELECT id, nombre, email, clave, rol FROM empleados");
+        $consulta = $db->prepararConsulta("SELECT id, nombre, email, clave, rol 
+        FROM empleados WHERE es_eliminado = 0");
         $consulta->execute();
         return $consulta->fetchAll(PDO::FETCH_CLASS, "Empleado");
     }
     
     public static function ObtenerUno($id){
         $db = AccesoDatos::ObjetoInstancia();
-        $consulta = $db->prepararConsulta("SELECT id, nombre, email, clave, rol FROM empleados WHERE id = :id LIMIT 1");
+        $consulta = $db->prepararConsulta("SELECT id, nombre, email, clave, rol 
+        FROM empleados 
+        WHERE id = :id AND es_elimnado = 0 LIMIT 1");
         $consulta->bindValue(":id", $id, PDO::PARAM_INT);
         $consulta->execute();
         return $consulta->fetchAll(PDO::FETCH_CLASS, "Empleado");
@@ -24,7 +27,8 @@ class Empleado{
 
     public static function Borrar($id){
         $db = AccesoDatos::ObjetoInstancia();
-        $consulta = $db->prepararConsulta("DELETE FROM empleados WHERE id = :id");
+        $consulta = $db->prepararConsulta("UPDATE empleados SET es_eliminado = 1
+        WHERE id = :id");
         $consulta->bindValue(":id", $id, PDO::PARAM_INT);
         $consulta->execute();
         return $db->obtenerUltimoId();
