@@ -49,14 +49,28 @@ class Pedido implements IPdoUsable{
 
     public static function ObtenerTodosRol($rol){
         $db = AccesoDatos::ObjetoInstancia();
-        $consulta = $db->prepararConsulta("SELECT pedidos.alfanumerico, pedidos.nombre, productos_pedidos.nombre_producto AS plato, 
-        tiempo_estimado, fecha_emision, fecha_entrega FROM pedidos 
+        $consulta = $db->prepararConsulta("SELECT pedidos.alfanumerico, pedidos.nombre, productos_pedidos.id_producto, productos_pedidos.nombre_producto AS plato, 
+        productos_pedidos.estado, tiempo_estimado, fecha_emision, fecha_entrega 
+        FROM pedidos 
         INNER JOIN productos_pedidos ON productos_pedidos.alfanumerico = pedidos.alfanumerico 
         WHERE productos_pedidos.tipo_producto = :rol AND pedidos.es_eliminado = 0");
         $consulta->bindValue(":rol", $rol, PDO::PARAM_STR);
         $consulta->execute();
         return $consulta->fetchAll(PDO::FETCH_CLASS, "stdClass");
     }
+
+    //cambiar comportamiento de tiempo estimado
+    public static function ObtenerPedidosMozo($id){
+        $db = AccesoDatos::ObjetoInstancia();
+        $consulta = $db->prepararConsulta("SELECT pedidos.alfanumerico, pedidos.nombre, productos_pedidos.nombre_producto AS plato, productos_pedidos.estado 
+        FROM pedidos 
+        INNER JOIN productos_pedidos ON productos_pedidos.alfanumerico = pedidos.alfanumerico 
+        WHERE pedidos.mozo_id = :id AND pedidos.es_eliminado = 0;");
+        $consulta->bindValue(":id", $id, PDO::PARAM_INT);
+        $consulta->execute();
+        return $consulta->fetchAll(PDO::FETCH_CLASS, "stdClass");
+    }
+
 
     public static function ObtenerUno($alfanumerico){
         $db = AccesoDatos::ObjetoInstancia();

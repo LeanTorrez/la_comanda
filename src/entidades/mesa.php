@@ -16,6 +16,10 @@ class Mesa implements IPdoUsable{
         return $consulta->fetchAll(PDO::FETCH_CLASS, "Mesa");
     }
 
+    public static function Foto($idMesa, $alfanumerico, $foto){
+
+    }
+
     public static function ObtenerUno($id){
         $db = AccesoDatos::ObjetoInstancia();
         $consulta = $db->prepararConsulta("SELECT id, estado, id_mozo, id_pedido 
@@ -45,9 +49,17 @@ class Mesa implements IPdoUsable{
         return $consulta->execute();
     }
 
+    public function ModificarEstado(){
+        $db = AccesoDatos::ObjetoInstancia();
+        $consulta = $db->prepararConsulta("UPDATE mesas SET estado = :estado WHERE id = :id");
+        $consulta->bindValue(":id", $this->id, PDO::PARAM_INT);
+        $consulta->bindValue(":estado", $this->estado, PDO::PARAM_STR);
+        return $consulta->execute();
+    }
+
     public static function IdMesaDisponible(){
         $db = AccesoDatos::ObjetoInstancia();
-        $consulta = $db->prepararConsulta("SELECT id FROM mesas WHERE estado = 'disponible' LIMIT 1");
+        $consulta = $db->prepararConsulta("SELECT id FROM mesas WHERE estado = 'cerrada' LIMIT 1");
         $consulta->execute();
         return $consulta->fetchObject();
     }

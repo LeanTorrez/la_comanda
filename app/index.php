@@ -33,7 +33,7 @@ $app->post("/login",\Loggin::class.":Login")->add(\MW::class.":VerificarClave")-
 $app->group("/usuario",function (RouteCollectorProxy $group){
     $group->get('/',\UsuarioController::class . ":TraerTodos");
 
-    $group->get('/{id}',\UsuarioController::class . ":TraerUno")->add(\MW::class.":VerificarIdQuery");
+    $group->get('/id',\UsuarioController::class . ":TraerUno")->add(\MW::class.":VerificarIdQuery");
 
     $group->delete('/borrar',\UsuarioController::class . ":BorrarUno")->add(\MW::class.":VerificarIdQuery");
 
@@ -60,7 +60,7 @@ $app->group('/producto', function (RouteCollectorProxy $group){
 
     $group->get('/',\ProductoController::class.":TraerTodos");
 
-    $group->get('/{id}',\ProductoController::class . ":TraerUno")->add(\MW::class.":VerificarIdQuery");
+    $group->get('/id',\ProductoController::class . ":TraerUno")->add(\MW::class.":VerificarIdQuery");
 
     $group->delete('/borrar',\ProductoController::class . ":BorrarUno")->add(\MW::class.":VerificarIdQuery");
 
@@ -75,11 +75,26 @@ $app->group('/producto', function (RouteCollectorProxy $group){
 $app->group('/mesa',function(RouteCollectorProxy $group){
     $group->get('/',\MesaController::class.":TraerTodos");
 
-    $group->get('/{id}',\MesaController::class . ":TraerUno")->add(\MW::class.":VerificarIdQuery");
+    $group->get('/id',\MesaController::class . ":TraerUno")->add(\MW::class.":VerificarIdQuery");
 
     $group->post('/alta',\MesaController::class.":CargarUno")->add(\MW::class.":VerificarEstado");
 
+    $group->post('/foto',\MesaController::class.":Foto")
+    ->add(\MW::class.":VerificarId")
+    ->add(\MW::class.":VerificarAlfanumerico");
+
+    $group->post('/encuesta',\MesaController::class.":Encuesta")
+    ->add(\MW::class.":VerificarId")
+    ->add(\MW::class.":VerificarAlfanumerico");
+    //verificar comentario y puntuacion
+
+    $group->get('/comentarios',\MesaController::class.":Comentarios");
+
     $group->delete('/borrar',\MesaController::class . ":BorrarUno")->add(\MW::class.":VerificarIdQuery");
+
+    $group->put('/actualizar/estado', \MesaController::class . ":ModificarEstado")->add(\MW::class.":VerificarCerrada");
+
+    $group->get('/cobrar',\MesaController::class . ":CobrarMesa")->add(\MW::class.":VerificarAlfanumericoQuery");
 
     $group->put('/actualizar', \MesaController::class . ":ModificarUno")
     ->add(\MW::class.":VerificarId")
@@ -89,14 +104,19 @@ $app->group('/mesa',function(RouteCollectorProxy $group){
 })->add(\MW::class .":VerificarPermisosMesa")->add(\AuthMiddleware::class .":verificarToken");
 
 $app->group('/pedido',function(RouteCollectorProxy $group){
-    $group->get('/',\PedidoController::class.":TraerTodos")->add(\MW::class.":VerificarRolQuery");
+    $group->get('/',\PedidoController::class.":TraerTodos");
 
-    $group->get('/{id}',\PedidoController::class.":TraerUno")->add(\MW::class.":VerificarAlfanumericoQuery");
+    $group->get('/id',\PedidoController::class.":TraerUno")->add(\MW::class.":VerificarAlfanumericoQuery");
 
     $group->put('/actualizar', \PedidoController::class . ":ModificarUno")
     ->add(\MW::class.":VerificarAlfanumerico")
     ->add(\MW::class.":VerificarId")
     ->add(\MW::class.":VerificarNombre");
+
+    $group->put('/actualizar/estado', \PedidoController::class . ":ModificarEstado")
+    ->add(\MW::class.":VerificarAlfanumerico")
+    ->add(\MW::class.":VerificarId")
+    ->add(\MW::class.":VerificarEstado");
 
     $group->delete('/borrar',\PedidoController::class . ":BorrarUno")->add(\MW::class.":VerificarAlfanumericoQuery");
 

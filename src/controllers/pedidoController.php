@@ -2,13 +2,17 @@
 include_once __DIR__."/../entidades/pedido.php";
 include_once __DIR__."/../entidades/producto.php";
 include_once __DIR__."/../entidades/productosPedidos.php";
+include_once __DIR__."/../utils/autenticadorJWT.php";
 
 class PedidoController{
 
     public function TraerTodos($request, $response, $args){
-        $rol = $request->getQueryParams()["rol"];
+        $header = $request->getHeaderLine('Authorization');
+        $token = trim(explode("Bearer", $header)[1]);   
+        $data = AutentificadorJWT::ObtenerData($token);
+
         $lista = false;
-        switch($rol){
+        switch($data->rol){
             case "socio":
                 $lista = Pedido::ObtenerTodos();
                 $lista = Pedido::FormatoPlatos($lista);
@@ -22,6 +26,9 @@ class PedidoController{
             case "bartender":
                 $lista = Pedido::ObtenerTodosRol("coctel");
                 break;  
+            case "mozo":
+                $lista = Pedido::ObtenerPedidosMozo($data->id);
+                break;
             }   
         if($lista !== false || $lista !== null){
             $payload = json_encode(array('Pedido' => $lista));
@@ -67,6 +74,26 @@ class PedidoController{
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    public function ModificarEstado($request, $response, $args){
+        $parametros = $request->getParsedBody();
+
+        $producto = new ProductoPedido();
+        $producto->id_producto = $parametros["id"];
+        $producto->alfanumerico = $parametros["alfanumerico"];
+        $producto->estado = $parametros["estado"];
+        $retorno = $producto->ModificarEstado();  
+        if($retorno){
+            $payload = json_encode(array('Exito' => "Se Modifico el estado con exito"));
+            $response->withStatus(200,"EXITO");
+            $response->getBody()->write($payload); 
+        }else{
+            $payload = json_encode(array("Error" => "Error al Modificar el estado"));
+            $response->withStatus(424,"ERROR");
+            $response->getBody()->write($payload); 
+        }
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
     public function ModificarUno($request, $response, $args){
         $parametros = $request->getParsedBody();
         $plato = Producto::ObtenerPlatos("'{$parametros["nombre"]}'");
@@ -76,8 +103,9 @@ class PedidoController{
             $producto->alfanumerico = $parametros["alfanumerico"];
             $producto->nombre_producto = $plato[0]->nombre;
             $producto->tipo_producto = $plato[0]->tipo;
+            $producto->id_producto = $plato[0]->id;
             $retorno = $producto->Modificar();  
-            if($retorno !== 0){
+            if($retorno){
                 $payload = json_encode(array('Exito' => "Se Modifico el producto con exito"));
                 $response->withStatus(200,"EXITO");
                 $response->getBody()->write($payload); 
@@ -95,6 +123,10 @@ class PedidoController{
     }
 
     public function CargarUno($request, $response, $args){
+        $header = $request->getHeaderLine('Authorization');
+        $token = trim(explode("Bearer", $header)[1]);   
+        $data = AutentificadorJWT::ObtenerData($token);
+
         $parametros = $request->getParsedBody()["user"];
         $nombre = $parametros["nombre"];
         $platos = $parametros["platos"];
@@ -102,13 +134,13 @@ class PedidoController{
         $objId = Mesa::IdMesaDisponible();
 
         if(isset($objId->id)){
-            //MEJORAR
+
             $listaProductos = Producto::ObtenerPlatos($platos);
             if($listaProductos !== false){
 
                 $pedido = new Pedido();
                 $pedido->nombre =  $nombre;
-                $pedido->mozo_id = 1;//JWT->data id mozo
+                $pedido->mozo_id = $data->id;
                 $pedido->tiempo_estimado = Producto::ObtenerTiempoMasAlto($listaProductos);
                 $pedido->alfanumerico = $pedido->CodigoCliente();
 
@@ -118,10 +150,21 @@ class PedidoController{
                     $response->getBody()->write($payload); 
                 }else{
                     if(ProductoPedido::PedidosInsertar($pedido->alfanumerico ,$listaProductos)){
-                        $payload = json_encode(array('Exito' => "Se llevo a cabo el pedido, su codigo es: {$pedido->alfanumerico}"));
-                        $response->withStatus(200,"EXITO");
-                        $response->getBody()->write($payload);
-                        //modificar Mesa en cuestion
+                        $mesa = new Mesa();
+                        $mesa->id = $objId->id;
+                        $mesa->id_mozo = $data->id;
+                        $mesa->id_pedido = $pedido->alfanumerico;
+                        $mesa->estado = "cliente esperando pedido";
+                        
+                        if($mesa->Insertar() !== 0){
+                            $payload = json_encode(array('Exito' => "Se llevo a cabo el pedido, su codigo es: {$pedido->alfanumerico}"));
+                            $response->withStatus(200,"EXITO");
+                            $response->getBody()->write($payload);
+                        }else{
+                            $payload = json_encode(array("Error" => "Error en el ingreso de la mesa"));
+                            $response->withStatus(424,"ERROR");
+                            $response->getBody()->write($payload);
+                        }
                     }
                 }             
             }else{
@@ -133,8 +176,7 @@ class PedidoController{
             $payload = json_encode(array("Error" => "No existen Mesas disponibles"));
             $response->withStatus(424,"ERROR");
             $response->getBody()->write($payload); 
-        } 
-        
+        }       
         return $response->withHeader('Content-Type', 'application/json');
     }
 }

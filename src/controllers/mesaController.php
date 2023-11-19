@@ -1,5 +1,7 @@
 <?php
 include_once __DIR__."/../entidades/mesa.php";
+include_once __DIR__."/../entidades/productosPedidos.php";
+include_once __DIR__."/../entidades/encuesta.php";
 class MesaController{
 
     public function TraerTodos($request, $response, $args){
@@ -32,6 +34,74 @@ class MesaController{
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    public function Foto($request, $response, $args){
+        $parametros = $request->getParsedBody();
+        $id = $parametros["id"];
+        $alfanumerico = $parametros["alfanumerico"];
+        $foto = $request->getUploadedFiles();
+        var_dump($foto);
+        if(false){
+            $payload = json_encode(array("Exito" => "")); 
+            $response->withStatus(200,"Exito");  
+            $response->getBody()->write($payload); 
+        }else{
+            $payload = json_encode(array("Error" => "hola"));
+            $response->withStatus(424,"ERROR");
+            $response->getBody()->write($payload);  
+        }
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function CobrarMesa($request, $response, $args){
+        $alfanumerico = $request->getQueryParams()["alfanumerico"];
+        $costo = ProductoPedido::ObtenerCosto($alfanumerico);
+        if(isset($costo->costo)){
+            $payload = json_encode(array("Exito" => "La cuenta es de {$costo->costo}")); 
+            $response->withStatus(200,"Exito");  
+            $response->getBody()->write($payload); 
+        }else{
+            $payload = json_encode(array("Error" => "Existio un error en el calculo de la cuenta su comida es gratis"));
+            $response->withStatus(424,"ERROR");
+            $response->getBody()->write($payload);  
+        }
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function Encuesta($request, $response, $args){
+        $parametros = $request->getParsedBody();
+        $id_mesa = $parametros["id"];
+        $puntuacion = $parametros["puntuacion"];
+        $alfanumerico = $parametros["alfanumerico"];
+        $comentario = $parametros["comentario"];
+
+        $encuesta = new Encuesta($alfanumerico,$id_mesa,$puntuacion,$comentario);
+        $retorno = $encuesta->Insertar();
+        if($retorno !== 0){
+            $payload = json_encode(array("Exito" => "Muchas gracias por la encuesta")); 
+            $response->withStatus(200,"Exito");  
+            $response->getBody()->write($payload); 
+        }else{
+            $payload = json_encode(array("Error" => "Error al guardar la encuesta"));
+            $response->withStatus(424,"ERROR");
+            $response->getBody()->write($payload);  
+        }
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function Comentarios($request, $response, $args){
+        $lista = Encuesta::MejoresPuntuaciones();
+        if($lista !== false){
+            $payload = json_encode(array("Exito" => $lista)); 
+            $response->withStatus(200,"Exito");  
+            $response->getBody()->write($payload); 
+        }else{
+            $payload = json_encode(array("Error" => "Error en cargar las puntuaciones"));
+            $response->withStatus(424,"ERROR");
+            $response->getBody()->write($payload);  
+        }
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
     public function BorrarUno($request, $response, $args){
         $id = $request->getQueryParams()["id"];
         $retorno = Mesa::Borrar($id);
@@ -43,6 +113,26 @@ class MesaController{
             $payload = json_encode(array("Error" => "La mesa no existe"));
             $response->withStatus(424,"ERROR");
             $response->getBody()->write($payload);  
+        }
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function ModificarEstado($request, $response, $args){
+        $parametros = $request->getParsedBody();
+        $mesa = new Mesa();
+        $mesa->id = $parametros["id"];
+        $mesa->estado = $parametros["estado"];
+        
+        $retorno = $mesa->ModificarEstado();
+
+        if($retorno){
+            $payload = json_encode(array('Exito' => "Se modifico Correctamente"));
+            $response->withStatus(200,"EXITO");
+            $response->getBody()->write($payload); 
+        }else{
+            $payload = json_encode(array("Error" => "Error al modificar"));
+            $response->withStatus(424,"ERROR");
+            $response->getBody()->write($payload); 
         }
         return $response->withHeader('Content-Type', 'application/json');
     }

@@ -235,6 +235,40 @@ class MW{
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    public function VerificarCerrada(Request $request, RequestHandler $handler): Response{
+        $parametros = $request->getParsedBody();
+        if(isset($parametros["estado"])){
+            if(!empty($parametros["estado"])){
+
+                if($parametros["estado"] === "cerrada"){
+
+                    $header = $request->getHeaderLine('Authorization');
+                    $token = trim(explode("Bearer", $header)[1]);   
+                    $data = AutentificadorJWT::ObtenerData($token);
+
+                    if($data->rol === "socio" ){
+                        $response = $handler->handle($request);
+                    }else{
+                        $response = new Response();
+                        $payload = json_encode(array("Error" => "Es necesario ser socio para cerrar la mesa"));
+                        $response->getBody()->write($payload);
+                    }
+                }else{
+                    $response = $handler->handle($request);
+                }
+            }else{
+                $response = new Response();
+                $payload = json_encode(array("Error" => "El estado esta vacio"));
+                $response->getBody()->write($payload);
+            }
+        }else{
+            $response = new Response();
+            $payload = json_encode(array("Error" => "Es necesario el parametro estado"));
+            $response->getBody()->write($payload);
+        }
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
     public function VerificarEstado(Request $request, RequestHandler $handler): Response{
         $parametros = $request->getParsedBody();
         if(isset($parametros["estado"])){
