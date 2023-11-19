@@ -4,15 +4,14 @@ include_once __DIR__."/../entidades/producto.php";
 class ProductoController{
 
     public function TraerTodos($request, $response, $args){
-        $tipo = $request->getQueryParams()["tipo"];
-        $lista = Producto::ObtenerTodos($tipo);
+        $lista = Producto::ObtenerTodos();
         
         if(!is_array($lista)){
             $payload = json_encode(array("Error" => false));
             $response->withStatus(424,"ERROR");
             $response->getBody()->write($payload);  
         }else{
-            $payload = json_encode(array($tipo => $lista));
+            $payload = json_encode(array("Productos" => $lista));
             $response->getBody()->write($payload);    
         }
         return $response->withHeader('Content-Type', 'application/json');

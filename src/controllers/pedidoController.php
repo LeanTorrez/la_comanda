@@ -69,7 +69,7 @@ class PedidoController{
 
     public function ModificarUno($request, $response, $args){
         $parametros = $request->getParsedBody();
-        $plato = Producto::ObtenerPlatos("'{$parametros["nombre_plato"]}'");
+        $plato = Producto::ObtenerPlatos("'{$parametros["nombre"]}'");
         if($plato !== false){
             $producto = new ProductoPedido();
             $producto->id = $parametros["id"];

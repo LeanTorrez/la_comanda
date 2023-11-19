@@ -61,12 +61,11 @@ class Producto implements IPdoUsable{
     }
 
 
-    public static function ObtenerTodos($tipo = "coctel"){
+    public static function ObtenerTodos(){
         $db = AccesoDatos::ObjetoInstancia();
         $consulta = $db->prepararConsulta("SELECT id, nombre, tipo, precio, tiempoPreparacion, cantidadVendida 
         FROM productos 
-        WHERE tipo = :tipo AND es_eliminado = 0");
-        $consulta->bindValue(":tipo", $tipo);
+        WHERE es_eliminado = 0");
         $consulta->execute();
         return $consulta->fetchAll(PDO::FETCH_CLASS, "Producto");
     }

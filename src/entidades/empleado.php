@@ -1,4 +1,7 @@
 <?php
+
+use Slim\CallableResolver;
+
 class Empleado{
     
     public $id;
@@ -7,6 +10,16 @@ class Empleado{
     public $clave;
     public $rol;
     
+    public static function Verificar($email,$clave){
+        $db = AccesoDatos::ObjetoInstancia();
+        $consulta = $db->prepararConsulta("SELECT id, nombre, rol 
+        FROM empleados WHERE email = :email AND clave = :clave AND es_eliminado = 0");
+        $consulta->bindValue(":email",$email,PDO::PARAM_STR);
+        $consulta->bindValue(":clave",$clave,PDO::PARAM_STR);
+        $consulta->execute();
+        return $consulta->fetchObject();
+    }
+
     public static function ObtenerTodos(){
         $db = AccesoDatos::ObjetoInstancia();
         $consulta = $db->prepararConsulta("SELECT id, nombre, email, clave, rol 
@@ -19,7 +32,7 @@ class Empleado{
         $db = AccesoDatos::ObjetoInstancia();
         $consulta = $db->prepararConsulta("SELECT id, nombre, email, clave, rol 
         FROM empleados 
-        WHERE id = :id AND es_elimnado = 0 LIMIT 1");
+        WHERE id = :id AND es_eliminado = 0 LIMIT 1");
         $consulta->bindValue(":id", $id, PDO::PARAM_INT);
         $consulta->execute();
         return $consulta->fetchAll(PDO::FETCH_CLASS, "Empleado");
