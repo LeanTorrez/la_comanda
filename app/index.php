@@ -33,6 +33,8 @@ $app->post("/login",\Loggin::class.":Login")->add(\MW::class.":VerificarClave")-
 $app->group("/usuario",function (RouteCollectorProxy $group){
     $group->get('/',\UsuarioController::class . ":TraerTodos");
 
+    $group->get('/descargar',\UsuarioController::class . ":Descargar");
+
     $group->get('/id',\UsuarioController::class . ":TraerUno")->add(\MW::class.":VerificarIdQuery");
 
     $group->delete('/borrar',\UsuarioController::class . ":BorrarUno")->add(\MW::class.":VerificarIdQuery");
@@ -42,6 +44,8 @@ $app->group("/usuario",function (RouteCollectorProxy $group){
     ->add(\MW::class.":VerificarEmail")
     ->add(\MW::class.":VerificarNombre")
     ->add(\MW::class.":VerificarRol");
+
+    $group->post('/subirCsv',\UsuarioController::class . ":SubirCSV");
 
     $group->put('/actualizar', \UsuarioController::class . ":ModificarUno")
     ->add(\MW::class.":VerificarId")
@@ -62,6 +66,8 @@ $app->group('/producto', function (RouteCollectorProxy $group){
 
     $group->get('/id',\ProductoController::class . ":TraerUno")->add(\MW::class.":VerificarIdQuery");
 
+    $group->get('/descargar',\ProductoController::class . ":Descargar");
+
     $group->delete('/borrar',\ProductoController::class . ":BorrarUno")->add(\MW::class.":VerificarIdQuery");
 
     $group->put('/actualizar', \ProductoController::class . ":ModificarUno")
@@ -77,17 +83,22 @@ $app->group('/mesa',function(RouteCollectorProxy $group){
 
     $group->get('/id',\MesaController::class . ":TraerUno")->add(\MW::class.":VerificarIdQuery");
 
+    $group->get('/descargar',\MesaController::class . ":Descargar");
+
     $group->post('/alta',\MesaController::class.":CargarUno")->add(\MW::class.":VerificarEstado");
 
     $group->post('/foto',\MesaController::class.":Foto")
     ->add(\MW::class.":VerificarId")
     ->add(\MW::class.":VerificarAlfanumerico");
+    //MIDDLEWARE FOTO
 
     $group->post('/encuesta',\MesaController::class.":Encuesta")
     ->add(\MW::class.":VerificarId")
     ->add(\MW::class.":VerificarAlfanumerico");
     //verificar comentario y puntuacion
 
+    $group->get('/masUsada',\MesaController::class.":MesaMasUsada");
+    
     $group->get('/comentarios',\MesaController::class.":Comentarios");
 
     $group->delete('/borrar',\MesaController::class . ":BorrarUno")->add(\MW::class.":VerificarIdQuery");

@@ -7,6 +7,10 @@ class Mesa implements IPdoUsable{
     public $id_mozo;
     public $id_pedido;
 
+    public function CrearArray(){
+        return array($this->id, $this->estado, $this->id_mozo, $this->id_pedido);
+    }
+
     public static function ObtenerTodos(){
         $db = AccesoDatos::ObjetoInstancia();
         $consulta = $db->prepararConsulta("SELECT id, estado, id_mozo, id_pedido 
@@ -17,7 +21,28 @@ class Mesa implements IPdoUsable{
     }
 
     public static function Foto($idMesa, $alfanumerico, $foto){
+        $ruta = __DIR__."/../imagenes/mesas";
+        $nombre = $idMesa."-".$alfanumerico;
+        $extension = pathinfo($foto->getClientFilename(), PATHINFO_EXTENSION); 
+        $filename = sprintf('%s.%0.8s', $nombre , $extension);
+        $rutaRelativa = "/../imagenes/mesas/".$filename;
+        $foto->moveTo($ruta.DIRECTORY_SEPARATOR.$filename);
 
+        $mesa = new Mesa();
+        $mesa->id_pedido = $alfanumerico;
+        $mesa->id = $idMesa;
+
+        return $mesa->ModificaFoto($rutaRelativa);
+    }
+
+    public function ModificaFoto($rutaFoto){
+        $db = AccesoDatos::ObjetoInstancia();
+        $consulta = $db->prepararConsulta("UPDATE mesas SET ruta_foto = :ruta_foto
+        WHERE id = :id AND id_pedido = :id_pedido");
+        $consulta->bindValue(":id", $this->id, PDO::PARAM_INT);
+        $consulta->bindValue(":id_pedido", $this->id_pedido, PDO::PARAM_STR);
+        $consulta->bindValue(":ruta_foto", $rutaFoto, PDO::PARAM_STR);
+        return  $consulta->execute();
     }
 
     public static function ObtenerUno($id){
@@ -28,6 +53,14 @@ class Mesa implements IPdoUsable{
         $consulta->bindValue(":id", $id, PDO::PARAM_INT);
         $consulta->execute();
         return $consulta->fetchAll(PDO::FETCH_CLASS, "Mesa");
+    }
+
+    public static function ObtenerMasUsada(){
+        $db = AccesoDatos::ObjetoInstancia();
+        $consulta = $db->prepararConsulta("SELECT id, estado, id_mozo, id_pedido, cantidad_usos
+        FROM mesas ORDER BY cantidad_usos DESC LIMIT 1");
+        $consulta->execute();
+        return $consulta->fetchObject();
     }
 
     public static function Borrar($id){
@@ -42,6 +75,16 @@ class Mesa implements IPdoUsable{
     public function Modificar(){
         $db = AccesoDatos::ObjetoInstancia();
         $consulta = $db->prepararConsulta("UPDATE mesas SET estado = :estado, id_mozo = :id_mozo, id_pedido = :id_pedido WHERE id = :id");
+        $consulta->bindValue(":id", $this->id, PDO::PARAM_INT);
+        $consulta->bindValue(":estado", $this->estado, PDO::PARAM_STR);
+        $consulta->bindValue(":id_mozo", $this->id_mozo, PDO::PARAM_STR);
+        $consulta->bindValue(":id_pedido", $this->id_pedido, PDO::PARAM_STR);
+        return $consulta->execute();
+    }
+
+    public function ModificarNuevoCliente(){
+        $db = AccesoDatos::ObjetoInstancia();
+        $consulta = $db->prepararConsulta("UPDATE mesas SET estado = :estado, id_mozo = :id_mozo, id_pedido = :id_pedido, cantidad_usos = cantidad_usos + 1 WHERE id = :id");
         $consulta->bindValue(":id", $this->id, PDO::PARAM_INT);
         $consulta->bindValue(":estado", $this->estado, PDO::PARAM_STR);
         $consulta->bindValue(":id_mozo", $this->id_mozo, PDO::PARAM_STR);

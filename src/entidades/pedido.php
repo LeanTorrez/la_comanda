@@ -41,7 +41,7 @@ class Pedido implements IPdoUsable{
         $consulta = $db->prepararConsulta("SELECT pedidos.alfanumerico, pedidos.nombre, 
         (SELECT GROUP_CONCAT(productos_pedidos.nombre_producto) 
         FROM productos_pedidos 
-        WHERE productos_pedidos.alfanumerico = pedidos.alfanumerico ) AS platos, tiempo_estimado, fecha_emision, fecha_entrega FROM pedidos
+        WHERE productos_pedidos.alfanumerico = pedidos.alfanumerico ) AS platos, horario_estimado, horario_entrega FROM pedidos
         WHERE es_eliminado = 0");
         $consulta->execute();
         return $consulta->fetchAll(PDO::FETCH_CLASS, "stdClass");
@@ -50,7 +50,7 @@ class Pedido implements IPdoUsable{
     public static function ObtenerTodosRol($rol){
         $db = AccesoDatos::ObjetoInstancia();
         $consulta = $db->prepararConsulta("SELECT pedidos.alfanumerico, pedidos.nombre, productos_pedidos.id_producto, productos_pedidos.nombre_producto AS plato, 
-        productos_pedidos.estado, tiempo_estimado, fecha_emision, fecha_entrega 
+        productos_pedidos.estado, horario_estimado, horario_entrega 
         FROM pedidos 
         INNER JOIN productos_pedidos ON productos_pedidos.alfanumerico = pedidos.alfanumerico 
         WHERE productos_pedidos.tipo_producto = :rol AND pedidos.es_eliminado = 0");
@@ -77,7 +77,7 @@ class Pedido implements IPdoUsable{
         $consulta = $db->prepararConsulta("SELECT pedidos.alfanumerico, pedidos.nombre, 
         (SELECT GROUP_CONCAT(productos_pedidos.nombre_producto) 
         FROM productos_pedidos 
-        WHERE productos_pedidos.alfanumerico = pedidos.alfanumerico ) AS platos, tiempo_estimado, fecha_emision, fecha_entrega 
+        WHERE productos_pedidos.alfanumerico = pedidos.alfanumerico ) AS platos, horario_estimado, horario_entrega 
         FROM pedidos 
         WHERE pedidos.alfanumerico = :alfanumerico AND es_eliminado = 0 LIMIT 1" );
         $consulta->bindValue(":alfanumerico", $alfanumerico, PDO::PARAM_STR);
@@ -87,12 +87,11 @@ class Pedido implements IPdoUsable{
     
     public function Insertar(){
         $db = AccesoDatos::ObjetoInstancia();
-        $consulta = $db->prepararConsulta("INSERT INTO pedidos ( alfanumerico, nombre, mozo_id, tiempo_estimado, fecha_emision ) 
-        VALUES (:alfanumerico, :nombre, :mozo_id ,:tiempo_estimado, :fecha_emision)");
+        $consulta = $db->prepararConsulta("INSERT INTO pedidos ( alfanumerico, nombre, mozo_id, horario_estimado ) 
+        VALUES (:alfanumerico, :nombre, :mozo_id , DATE_ADD(:fecha_emision,INTERVAL '{$this->tiempo_estimado}' MINUTE))");
         $consulta->bindValue(":alfanumerico", $this->alfanumerico, PDO::PARAM_STR);
         $consulta->bindValue(":nombre", $this->nombre, PDO::PARAM_STR);
         $consulta->bindValue(":mozo_id", $this->mozo_id, PDO::PARAM_STR);
-        $consulta->bindValue(":tiempo_estimado", $this->tiempo_estimado, PDO::PARAM_STR);
         $consulta->bindValue(":fecha_emision", date("Y-m-d h:i:s"), PDO::PARAM_STR);
         $consulta->execute();
         return $db->obtenerUltimoId();

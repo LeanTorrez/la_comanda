@@ -2,6 +2,8 @@
 include_once __DIR__."/../entidades/mesa.php";
 include_once __DIR__."/../entidades/productosPedidos.php";
 include_once __DIR__."/../entidades/encuesta.php";
+use \Slim\Psr7\Factory\StreamFactory;
+
 class MesaController{
 
     public function TraerTodos($request, $response, $args){
@@ -20,10 +22,24 @@ class MesaController{
 
     public function TraerUno($request, $response, $args){
         $id = $request->getQueryParams()["id"];
-        $empleado = Mesa::ObtenerUno($id);
+        $mesa = Mesa::ObtenerUno($id);
         //si no lo encuentra devuelve array vacio ARREGLAR
-        if(is_array($empleado)){
-            $payload = json_encode(array("Mesa" => $empleado)); 
+        if(is_array($mesa)){
+            $payload = json_encode(array("Mesa" => $mesa)); 
+            $response->withStatus(200,"Exito");  
+            $response->getBody()->write($payload); 
+        }else{
+            $payload = json_encode(array("Error" => "Id Inexistente"));
+            $response->withStatus(424,"ERROR");
+            $response->getBody()->write($payload);  
+        }
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function MesaMasUsada($request, $response, $args){
+        $mesa = Mesa::ObtenerMasUsada();
+        if($mesa instanceof stdClass){
+            $payload = json_encode(array("Mesa" => $mesa)); 
             $response->withStatus(200,"Exito");  
             $response->getBody()->write($payload); 
         }else{
@@ -38,14 +54,16 @@ class MesaController{
         $parametros = $request->getParsedBody();
         $id = $parametros["id"];
         $alfanumerico = $parametros["alfanumerico"];
-        $foto = $request->getUploadedFiles();
-        var_dump($foto);
-        if(false){
-            $payload = json_encode(array("Exito" => "")); 
+        $foto = $request->getUploadedFiles()["foto"];
+        
+        $retorno = Mesa::Foto($id, $alfanumerico, $foto);
+
+        if( $retorno){
+            $payload = json_encode(array("Exito" => "Se agrego existosamente la foto")); 
             $response->withStatus(200,"Exito");  
             $response->getBody()->write($payload); 
         }else{
-            $payload = json_encode(array("Error" => "hola"));
+            $payload = json_encode(array("Error" => "Error: al subir la foto al servidor"));
             $response->withStatus(424,"ERROR");
             $response->getBody()->write($payload);  
         }
@@ -117,6 +135,24 @@ class MesaController{
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    public function Descargar($request, $response, $args){
+        $str = Archivos::BaseDatosCSV(array("Mesa","ObtenerTodos"),array("id", "estado", "id_mozo", "id_pedido"));
+        if($str !== false){
+            $streamFactory = new StreamFactory();
+            $stream = $streamFactory->createStreamFromFile($str);
+            $response->withStatus(200,"Exito");
+            unlink($str);
+            $response = $response->withHeader('Content-Type', 'text/csv');
+            $response = $response->withHeader('Content-Disposition', 'attachment;filename=mesa.csv');
+            return $response->withBody($stream);
+        }else{
+            $payload = json_encode(array("Error" => "error en la descarga del archivo"));
+            $response->withStatus(404,"Error");
+            $response->getBody()->write($payload);    
+        }
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
     public function ModificarEstado($request, $response, $args){
         $parametros = $request->getParsedBody();
         $mesa = new Mesa();
@@ -124,7 +160,7 @@ class MesaController{
         $mesa->estado = $parametros["estado"];
         
         $retorno = $mesa->ModificarEstado();
-
+        
         if($retorno){
             $payload = json_encode(array('Exito' => "Se modifico Correctamente"));
             $response->withStatus(200,"EXITO");

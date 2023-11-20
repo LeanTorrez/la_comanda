@@ -10,6 +10,21 @@ class Empleado{
     public $clave;
     public $rol;
     
+    
+    public static function Instanciar($array){
+        $empleado = new Empleado();
+        $empleado->id = $array[0];
+        $empleado->nombre = $array[1];
+        $empleado->email = $array[2];
+        $empleado->clave = $array[3];
+        $empleado->rol = $array[4];
+        return $empleado;
+    }
+
+    public function CrearArray(){
+        return array($this->id,$this->nombre,$this->email,$this->clave,$this->rol);
+    }
+
     public static function Verificar($email,$clave){
         $db = AccesoDatos::ObjetoInstancia();
         $consulta = $db->prepararConsulta("SELECT id, nombre, rol 

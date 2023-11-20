@@ -1,5 +1,6 @@
 <?php
 include_once __DIR__."/../entidades/producto.php";
+use \Slim\Psr7\Factory\StreamFactory;
 
 class ProductoController{
 
@@ -12,6 +13,24 @@ class ProductoController{
             $response->getBody()->write($payload);  
         }else{
             $payload = json_encode(array("Productos" => $lista));
+            $response->getBody()->write($payload);    
+        }
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function Descargar($request, $response, $args){
+        $str = Archivos::BaseDatosCSV(array("Producto","ObtenerTodos"),array("id", "nombre", "tipo", "precio", "tiempoPreparacion", "cantidadVendida"));
+        if($str !== false){
+            $streamFactory = new StreamFactory();
+            $stream = $streamFactory->createStreamFromFile($str);
+            $response->withStatus(200,"Exito");
+            unlink($str);
+            $response = $response->withHeader('Content-Type', 'text/csv');
+            $response = $response->withHeader('Content-Disposition', 'attachment;filename=producto.csv');
+            return $response->withBody($stream);
+        }else{
+            $payload = json_encode(array("Error" => "error en la descarga del archivo"));
+            $response->withStatus(404,"Error");
             $response->getBody()->write($payload);    
         }
         return $response->withHeader('Content-Type', 'application/json');

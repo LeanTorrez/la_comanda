@@ -2,6 +2,8 @@
 include_once __DIR__."/../Interfaces/IApiUsable.php";
 include_once __DIR__."/../db/accesoDatos.php";
 include_once __DIR__."/../entidades/empleado.php";
+include_once __DIR__."/../utils/archivo.php";
+use \Slim\Psr7\Factory\StreamFactory;
 
 class UsuarioController implements IApiUsable
 {
@@ -10,6 +12,9 @@ class UsuarioController implements IApiUsable
     public $_email;
     public $_clave;
 
+    /*
+    Obtiene todos los Empleados que existen en la base de datos y no estan eliminados
+    */
     public function TraerTodos($request, $response, $args)
     {  
         $lista = Empleado::ObtenerTodos();
@@ -24,6 +29,53 @@ class UsuarioController implements IApiUsable
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    /* 
+    Maneja el CSV pasado por POST y lo Insertar en la base de datos 
+    */
+    public function SubirCSV($request, $response, $args){
+        $file = $request->getUploadedFiles()["csv"];
+        $retorno = Archivos::CSVBaseDatos($file,array("Empleado","Instanciar"));
+        if($retorno){
+            $payload = json_encode(array("Exito" => "Exito al cargar los usuarios a la BD"));
+            $response->withStatus(200,"Exito");
+            $response->getBody()->write($payload);  
+        }else{
+            $payload = json_encode(array("Error" => "ERRO al subir los datos al BD"));
+            $response->withStatus(404,"Error");
+            $response->getBody()->write($payload);    
+        }
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    /* 
+    Obtiene los datos de la base de datos de la respectiva entidad y la convierte en un CSV
+    */
+    public function Descargar($request, $response, $args){
+        /* Primer argumento es un callback, en este caso llama al metodo estatico ObtenerTodos de la clase
+           Empleado, segundo argumento los nombres de las columnas que seran el primer renglon del CSV  
+        */
+        $str = Archivos::BaseDatosCSV(array("Empleado","ObtenerTodos"),array("id", "nombre", "email", "clave", "rol"));
+
+        if($str !== false){
+            $streamFactory = new StreamFactory();
+            $stream = $streamFactory->createStreamFromFile($str);
+            $response->withStatus(200,"Exito");
+            unlink($str);
+            $response = $response->withHeader('Content-Type', 'text/csv');
+            $response = $response->withHeader('Content-Disposition', 'attachment;filename=empleados.csv');
+            return $response->withBody($stream);
+        }else{
+            $payload = json_encode(array("Error" => "error en la descarga del archivo"));
+            $response->withStatus(404,"Error");
+            $response->getBody()->write($payload);    
+        }
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+
+    /* 
+    Por get entra el id del empleado que se quiere buscar y se lo retorna
+    */
     public function TraerUno($request, $response, $args){
         $id = $request->getQueryParams()["id"];
         $empleado = Empleado::ObtenerUno($id);
@@ -40,6 +92,9 @@ class UsuarioController implements IApiUsable
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    /**
+     * Entra el id por GET y se borra (soft-delete) de la base de datos respectivas
+     */
     public function BorrarUno($request, $response, $args){
         $id = $request->getQueryParams()["id"];
         $retorno = Empleado::Borrar($id);
@@ -55,6 +110,10 @@ class UsuarioController implements IApiUsable
         return $response->withHeader('Content-Type', 'application/json');
     }
    
+    /**
+     * Entra los datos mas importantes por PUT y se modifican en la base de datos
+     * con su ID respectiva
+     */
     public function ModificarUno($request, $response, $args){
         $parametros = $request->getParsedBody();
         $empleado = new Empleado();
@@ -78,11 +137,13 @@ class UsuarioController implements IApiUsable
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    /**
+     * Entra por POST con los datos del nuevo empleado que se inserta a la base de datos
+     */
     public function CargarUno($request, $response, $args)
     {
         $parametros = $request->getParsedBody();
 
-        //VERIFICAR PARAMETROS DESPUES
         $nombre =  $parametros["nombre"];
         $clave =  $parametros["clave"];
         $email =  $parametros["email"];
@@ -106,5 +167,4 @@ class UsuarioController implements IApiUsable
         }
         return $response->withHeader('Content-Type', 'application/json');
     }
-
 }

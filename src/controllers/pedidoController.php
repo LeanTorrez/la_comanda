@@ -31,7 +31,7 @@ class PedidoController{
                 break;
             }   
         if($lista !== false || $lista !== null){
-            $payload = json_encode(array('Pedido' => $lista));
+            $payload = json_encode(array('Pedidos '.$data->rol => $lista));
             $response->withStatus(200,"EXITO");
             $response->getBody()->write($payload);
         }else{
@@ -134,7 +134,6 @@ class PedidoController{
         $objId = Mesa::IdMesaDisponible();
 
         if(isset($objId->id)){
-
             $listaProductos = Producto::ObtenerPlatos($platos);
             if($listaProductos !== false){
 
@@ -156,7 +155,7 @@ class PedidoController{
                         $mesa->id_pedido = $pedido->alfanumerico;
                         $mesa->estado = "cliente esperando pedido";
                         
-                        if($mesa->Insertar() !== 0){
+                        if($mesa->ModificarNuevoCliente()){
                             $payload = json_encode(array('Exito' => "Se llevo a cabo el pedido, su codigo es: {$pedido->alfanumerico}"));
                             $response->withStatus(200,"EXITO");
                             $response->getBody()->write($payload);

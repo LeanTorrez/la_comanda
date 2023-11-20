@@ -28,12 +28,17 @@ class Producto implements IPdoUsable{
         }
         return max($tiempos);
     }
+    
+    public function CrearArray(){
+        return array($this->id, $this->nombre, $this->tipo, $this->precio, $this->tiempoPreparacion, $this->cantidadVendida);
+    }
 
-    //FIJARTE es_eliminado 0
     public static function ObtenerPlatos($platos){
         $strPlatos = self::ParsePlatos($platos);
         $db = AccesoDatos::ObjetoInstancia();
-        $consulta = $db->prepararConsulta("SELECT id, nombre, tipo, tiempoPreparacion FROM productos WHERE nombre IN ($strPlatos)");
+        $consulta = $db->prepararConsulta("SELECT id, nombre, tipo, tiempoPreparacion 
+        FROM productos 
+        WHERE nombre IN ($strPlatos)");
         $consulta->execute();
         return $consulta->fetchAll(PDO::FETCH_CLASS, "Producto");
     }
