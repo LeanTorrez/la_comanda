@@ -3,9 +3,13 @@ include_once __DIR__."/../entidades/pedido.php";
 include_once __DIR__."/../entidades/producto.php";
 include_once __DIR__."/../entidades/productosPedidos.php";
 include_once __DIR__."/../utils/autenticadorJWT.php";
+use \Slim\Psr7\Factory\StreamFactory;
 
 class PedidoController{
 
+    /**
+     * Obtiene los datos de los  pedido, en base al rol que tiene el JWT
+     */
     public function TraerTodos($request, $response, $args){
         $header = $request->getHeaderLine('Authorization');
         $token = trim(explode("Bearer", $header)[1]);   
@@ -42,6 +46,9 @@ class PedidoController{
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    /* 
+    Por get entra el id del pedido que se quiere buscar y se lo retorna
+    */
     public function TraerUno($request, $response, $args){
         $alfanumerico = $request->getQueryParams()["alfanumerico"];
 
@@ -59,6 +66,9 @@ class PedidoController{
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    /**
+     * Entra el id por GET y se borra (soft-delete) de la base de datos respectivas
+     */
     public function BorrarUno($request, $response, $args){
         $alfanumerico = $request->getQueryParams()["alfanumerico"];
         $retorno = Pedido::Borrar($alfanumerico);
@@ -74,6 +84,9 @@ class PedidoController{
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    /**
+     * Modifico el estado del id que es pasado por PUT
+     */
     public function ModificarEstado($request, $response, $args){
         $parametros = $request->getParsedBody();
 
@@ -94,6 +107,10 @@ class PedidoController{
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    /**
+     * Entra los datos mas importantes por PUT y se modifican en la base de datos
+     * con su ID respectiva
+     */
     public function ModificarUno($request, $response, $args){
         $parametros = $request->getParsedBody();
         $plato = Producto::ObtenerPlatos("'{$parametros["nombre"]}'");
@@ -122,6 +139,9 @@ class PedidoController{
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    /**
+     * Entra por POST con los datos del nuevo pedido que se inserta a la base de datos
+     */
     public function CargarUno($request, $response, $args){
         $header = $request->getHeaderLine('Authorization');
         $token = trim(explode("Bearer", $header)[1]);   
@@ -132,11 +152,14 @@ class PedidoController{
         $platos = $parametros["platos"];
 
         $objId = Mesa::IdMesaDisponible();
-
+        
         if(isset($objId->id)){
             $listaProductos = Producto::ObtenerPlatos($platos);
-            if($listaProductos !== false){
-
+            if($listaProductos !== false &&
+               !empty($listaProductos) && 
+               count($platos) == count((array)$listaProductos))
+            {
+ 
                 $pedido = new Pedido();
                 $pedido->nombre =  $nombre;
                 $pedido->mozo_id = $data->id;
@@ -165,7 +188,7 @@ class PedidoController{
                             $response->getBody()->write($payload);
                         }
                     }
-                }             
+                }          
             }else{
                 $payload = json_encode(array("Error" => "Uno de los platos no existe en el menu"));
                 $response->withStatus(424,"ERROR");

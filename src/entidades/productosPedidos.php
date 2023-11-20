@@ -8,6 +8,16 @@ class ProductoPedido{
     public $nombre_producto;
     public $estado;
 
+    /**
+     * Crea instancia de productos_pedidos en la alta de pedidos, y se los guarda individualmente 
+     * en la base de datos
+     * @param alfanumerico
+     * identificador del pedido
+     * @param arrayProductos
+     * lista de productos que seran insertados en la bd
+     * @return bool
+     * retorna true si fue exitoso, false si hubo un error
+     */
     public static function PedidosInsertar($alfanumerico,$arrayProductos){
         $retorno = true;
         foreach($arrayProductos as $producto){
@@ -26,6 +36,14 @@ class ProductoPedido{
         return $retorno;
     }
 
+    /**
+     * Suma los valores que tengan en comun el alfanumerico, y lo retorna
+     * 
+     * @param alfanumerico
+     * el codigo que sera buscado en la bd
+     * @return
+     * retorna el monto que se tiene que pagar ese pedido
+     */
     public static function ObtenerCosto($alfanumerico){
         $db = AccesoDatos::ObjetoInstancia();
         $consulta = $db->prepararConsulta("SELECT SUM(productos.precio) AS costo 
@@ -37,7 +55,12 @@ class ProductoPedido{
         return $consulta->fetchObject();
     }
 
-    ///modificar llamada id_producto
+    /**
+     * Modifica el estado de un producto_pedido en la bd por su alfanumerico y id_producto
+     * 
+     * @return bool
+     * retorna true si fue exitoso, false si hubo un error
+     */
     public function ModificarEstado(){
         $db = AccesoDatos::ObjetoInstancia();
         $consulta = $db->prepararConsulta("UPDATE productos_pedidos 
@@ -49,6 +72,11 @@ class ProductoPedido{
         return $consulta->execute();
     }
 
+    /**
+     * Se modifica un producto_pedido del id respectivo que se manda
+     * @return bool
+     * retorna true si fue exitoso, false si hubo un error
+     */
     public function Modificar(){
         $db = AccesoDatos::ObjetoInstancia();
         $consulta = $db->prepararConsulta("UPDATE productos_pedidos 
@@ -62,6 +90,12 @@ class ProductoPedido{
         return $consulta->execute();
     }
 
+    /**
+     * Inserta el nuevo producto_pedido a la bd
+     * 
+     * @return int
+     * retorna el id que fue insertado
+     */
     public function Insertar(){
         $db = AccesoDatos::ObjetoInstancia();
         $consulta = $db->prepararConsulta("INSERT INTO productos_pedidos ( alfanumerico, id_producto, tipo_producto, nombre_producto) 

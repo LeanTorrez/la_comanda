@@ -55,6 +55,108 @@ class MW{
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    public function VerificarRolSocio(Request $request, RequestHandler $handler): Response{
+        $header = $request->getHeaderLine('Authorization');
+        $token = trim(explode("Bearer", $header)[1]);
+        $data = AutentificadorJWT::ObtenerData($token);
+        if($data->rol === "socio"){
+            $response = $handler->handle($request);
+        }else{
+            $response = new Response();
+            $payload = json_encode(array("Error" => "Necesitas ser un socio para poder entrar"));
+            $response->getBody()->write($payload);
+        }
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function VerificarRolMozo(Request $request, RequestHandler $handler): Response{
+        $header = $request->getHeaderLine('Authorization');
+        $token = trim(explode("Bearer", $header)[1]);
+        $data = AutentificadorJWT::ObtenerData($token);
+        if($data->rol === "mozo"){
+            $response = $handler->handle($request);
+        }else{
+            $response = new Response();
+            $payload = json_encode(array("Error" => "Necesitas ser un mozo para poder entrar"));
+            $response->getBody()->write($payload);
+        }
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function VerificarComentario(Request $request, RequestHandler $handler): Response{
+        $parametros = $request->getParsedBody();
+        if(isset($parametros["comentario"])){
+            if(!empty($parametros["comentario"])){
+                $response = $handler->handle($request);
+            }else{
+                $response = new Response();
+                $payload = json_encode(array("Error" => "El comentario esta vacio"));
+                $response->getBody()->write($payload);
+            }
+        }else{
+            $response = new Response();
+            $payload = json_encode(array("Error" => "Es necesario el parametro comentario"));
+            $response->getBody()->write($payload);
+        }
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function VerificarPuntuacion(Request $request, RequestHandler $handler): Response{
+        $parametros = $request->getParsedBody();
+        if(isset($parametros["puntuacion"])){
+            if(!empty($parametros["puntuacion"])){
+                $response = $handler->handle($request);
+            }else{
+                $response = new Response();
+                $payload = json_encode(array("Error" => "La puntuacion esta vacio"));
+                $response->getBody()->write($payload);
+            }
+        }else{
+            $response = new Response();
+            $payload = json_encode(array("Error" => "Es necesario el parametro puntuacion"));
+            $response->getBody()->write($payload);
+        }
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function VerificarFoto(Request $request, RequestHandler $handler): Response{
+        $foto = $request->getUploadedFiles();
+        if(isset($foto["foto"])){
+            $img = $foto["foto"];
+            if($img->getSize() !== 0){
+                $response = $handler->handle($request);
+            }else{
+                $response = new Response();
+                $payload = json_encode(array("Error" => "la foto esta vacia"));
+                $response->getBody()->write($payload);
+            }
+        }else{
+            $response = new Response();
+            $payload = json_encode(array("Error" => "Es necesario el parametro foto"));
+            $response->getBody()->write($payload);
+        }
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function VerificarCsv(Request $request, RequestHandler $handler): Response{
+        $archivo = $request->getUploadedFiles();
+        if(isset($archivo["csv"])){
+            $csv = $archivo["csv"];
+            if($csv->getSize() !== 0){
+                $response = $handler->handle($request);
+            }else{
+                $response = new Response();
+                $payload = json_encode(array("Error" => "El csv esta vacio"));
+                $response->getBody()->write($payload);
+            }
+        }else{
+            $response = new Response();
+            $payload = json_encode(array("Error" => "Es necesario el parametro csv"));
+            $response->getBody()->write($payload);
+        }
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
     public function VerificarEmail(Request $request, RequestHandler $handler): Response{
         $parametros = $request->getParsedBody();
         if(isset($parametros["email"])){
@@ -149,7 +251,18 @@ class MW{
         $parametros = $request->getParsedBody();
         if(isset($parametros["rol"])){
             if(!empty($parametros["rol"])){
-                $response = $handler->handle($request);
+                if($parametros["rol"] === "socio" ||
+                   $parametros["rol"] === "cocinero" ||
+                   $parametros["rol"] === "bartender" ||
+                   $parametros["rol"] === "mozo" ||
+                   $parametros["rol"] === "cervecero")
+                {
+                    $response = $handler->handle($request);
+                }else{
+                    $response = new Response();
+                    $payload = json_encode(array("Error" => "El rol no existe en los roles existen de los empleados"));
+                    $response->getBody()->write($payload);
+                }
             }else{
                 $response = new Response();
                 $payload = json_encode(array("Error" => "El rol esta vacio"));
@@ -185,7 +298,16 @@ class MW{
         $parametros = $request->getParsedBody();
         if(isset($parametros["tipo"])){
             if(!empty($parametros["tipo"])){
-                $response = $handler->handle($request);
+                if($parametros["tipo"] === "comida" ||
+                   $parametros["tipo"] === "coctel" ||
+                   $parametros["tipo"] === "cerveza")
+                {
+                    $response = $handler->handle($request);
+                }else{
+                    $response = new Response();
+                    $payload = json_encode(array("Error" => "El tipo de comida no existe en los posibles tipos de comidas (comida, coctel, cerveza)"));
+                    $response->getBody()->write($payload);
+                }
             }else{
                 $response = new Response();
                 $payload = json_encode(array("Error" => "El tipo esta vacio"));
@@ -329,7 +451,13 @@ class MW{
             if(!empty($parametros["user"])){
                 $datos = $parametros["user"];
                 if(isset($datos["nombre"]) && isset($datos["platos"])){
-                    $response = $handler->handle($request);
+                    if(!empty($datos["nombre"]) && !empty($datos["platos"])){
+                        $response = $handler->handle($request);
+                    }else{
+                        $response = new Response();
+                        $payload = json_encode(array("Error" => "El parametro nombre o platos estan vacios"));
+                        $response->getBody()->write($payload);
+                    }
                 }else{
                     $response = new Response();
                     $payload = json_encode(array("Error" => "Faltan los parametros nombre o platos"));

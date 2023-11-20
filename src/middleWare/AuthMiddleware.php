@@ -12,7 +12,7 @@ class AuthMiddleware
         $header = $request->getHeaderLine('Authorization');
         if(!empty($header)){
             $token = trim(explode("Bearer", $header)[1]);
-            try {
+            try { 
                 AutentificadorJWT::VerificarToken($token);
                 $response = $handler->handle($request);
             } catch (Exception $e) {

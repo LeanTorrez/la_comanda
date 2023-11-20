@@ -6,6 +6,9 @@ use \Slim\Psr7\Factory\StreamFactory;
 
 class MesaController{
 
+    /**
+     * Trae todas las mesas existentes en la bd
+     */
     public function TraerTodos($request, $response, $args){
         $lista = Mesa::ObtenerTodos();
         if($lista !== false){
@@ -20,6 +23,9 @@ class MesaController{
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    /* 
+    Por get entra el id del empleado que se quiere buscar y se lo retorna
+    */
     public function TraerUno($request, $response, $args){
         $id = $request->getQueryParams()["id"];
         $mesa = Mesa::ObtenerUno($id);
@@ -36,6 +42,9 @@ class MesaController{
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    /**
+     * Trae la mesa mas usada desde la base de datos
+     */
     public function MesaMasUsada($request, $response, $args){
         $mesa = Mesa::ObtenerMasUsada();
         if($mesa instanceof stdClass){
@@ -50,6 +59,9 @@ class MesaController{
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    /**
+     * Obtiene la foto por POST y la guarda en la server, y su ruta en la bd
+     */
     public function Foto($request, $response, $args){
         $parametros = $request->getParsedBody();
         $id = $parametros["id"];
@@ -70,6 +82,9 @@ class MesaController{
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    /**
+     * Obtiene el costo de la mesa con el alfanumerico que entra por Query GET
+     */
     public function CobrarMesa($request, $response, $args){
         $alfanumerico = $request->getQueryParams()["alfanumerico"];
         $costo = ProductoPedido::ObtenerCosto($alfanumerico);
@@ -85,6 +100,9 @@ class MesaController{
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    /**
+     * POST sube los datos de la encuesta dada al cliente, a la bd Encuestas
+     */
     public function Encuesta($request, $response, $args){
         $parametros = $request->getParsedBody();
         $id_mesa = $parametros["id"];
@@ -106,6 +124,9 @@ class MesaController{
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    /**
+     * Obtiene los mejores comentarios de la bd encuesta ordenados descendientemente
+     */
     public function Comentarios($request, $response, $args){
         $lista = Encuesta::MejoresPuntuaciones();
         if($lista !== false){
@@ -120,6 +141,9 @@ class MesaController{
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    /**
+     * Entra el id por GET y se borra (soft-delete) de la base de datos respectivas
+     */
     public function BorrarUno($request, $response, $args){
         $id = $request->getQueryParams()["id"];
         $retorno = Mesa::Borrar($id);
@@ -135,7 +159,14 @@ class MesaController{
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    /**
+     * Descarga la informacion del bd Mesa a un csv y lo entrega por el body
+     * 'USAR en postman la opcion "send and download" para obtener el archivo'
+     */
     public function Descargar($request, $response, $args){
+        /* Primer argumento es un callback, en este caso llama al metodo estatico ObtenerTodos de la clase
+           Empleado, segundo argumento los nombres de las columnas que seran el primer renglon del CSV  
+        */
         $str = Archivos::BaseDatosCSV(array("Mesa","ObtenerTodos"),array("id", "estado", "id_mozo", "id_pedido"));
         if($str !== false){
             $streamFactory = new StreamFactory();
@@ -153,6 +184,27 @@ class MesaController{
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    /* 
+    Maneja el CSV pasado por POST y lo Insertar en la base de datos 
+    */
+    public function SubirCSV($request, $response, $args){
+        $file = $request->getUploadedFiles()["csv"];
+        $retorno = Archivos::CSVBaseDatos($file,array("Mesa","Instanciar"));
+        if($retorno){
+            $payload = json_encode(array("Exito" => "Exito al cargar los usuarios a la BD"));
+            $response->withStatus(200,"Exito");
+            $response->getBody()->write($payload);  
+        }else{
+            $payload = json_encode(array("Error" => "ERRO al subir los datos al BD"));
+            $response->withStatus(404,"Error");
+            $response->getBody()->write($payload);    
+        }
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    /**
+     * Modifico el estado del id que es pasado por PUT
+     */
     public function ModificarEstado($request, $response, $args){
         $parametros = $request->getParsedBody();
         $mesa = new Mesa();
@@ -160,7 +212,13 @@ class MesaController{
         $mesa->estado = $parametros["estado"];
         
         $retorno = $mesa->ModificarEstado();
-        
+        if($mesa->estado === "con cliente comiendo"){
+            //en caso que sea con cliente comiendo significa que ya se entrego la comida
+            //por lo tanto se cambia el horario_entrega en pedido db
+            $alfanumerico = strtolower($parametros["alfanumerico"]);
+            Pedido::EntregaPedido($alfanumerico);
+        }
+
         if($retorno){
             $payload = json_encode(array('Exito' => "Se modifico Correctamente"));
             $response->withStatus(200,"EXITO");
@@ -173,6 +231,10 @@ class MesaController{
         return $response->withHeader('Content-Type', 'application/json');
     }
    
+    /**
+     * Entra los datos mas importantes por PUT y se modifican en la base de datos
+     * con su ID respectiva
+     */
     public function ModificarUno($request, $response, $args){
         $parametros = $request->getParsedBody();
         $mesa = new Mesa();
@@ -195,6 +257,9 @@ class MesaController{
         return $response->withHeader('Content-Type', 'application/json');
     }
     
+    /**
+     * Entra por POST con los datos del nuevo empleado que se inserta a la base de datos
+     */
 	public function CargarUno($request, $response, $args){
         $parametros = $request->getParsedBody();
         $estado = $parametros["estado"];

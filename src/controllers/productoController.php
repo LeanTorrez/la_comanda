@@ -4,6 +4,9 @@ use \Slim\Psr7\Factory\StreamFactory;
 
 class ProductoController{
 
+    /**
+     * Trae todas los producto existentes en la bd
+     */
     public function TraerTodos($request, $response, $args){
         $lista = Producto::ObtenerTodos();
         
@@ -18,7 +21,14 @@ class ProductoController{
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    /**
+     * Descarga la informacion del bd Mesa a un csv y lo entrega por el body
+     * 'USAR en postman la opcion "send and download" para obtener el archivo'
+     */
     public function Descargar($request, $response, $args){
+        /* Primer argumento es un callback, en este caso llama al metodo estatico ObtenerTodos de la clase
+           Empleado, segundo argumento los nombres de las columnas que seran el primer renglon del CSV  
+        */
         $str = Archivos::BaseDatosCSV(array("Producto","ObtenerTodos"),array("id", "nombre", "tipo", "precio", "tiempoPreparacion", "cantidadVendida"));
         if($str !== false){
             $streamFactory = new StreamFactory();
@@ -36,6 +46,9 @@ class ProductoController{
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    /* 
+    Por get entra el id del producto que se quiere buscar y se lo retorna
+    */
     public function TraerUno($request, $response, $args){
         $id = $request->getQueryParams()["id"];
         $producto = Producto::ObtenerUno($id);
@@ -52,6 +65,9 @@ class ProductoController{
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    /**
+     * Entra el id por GET y se borra (soft-delete) de la base de datos respectivas
+     */
     public function BorrarUno($request, $response, $args){
         $id = $request->getQueryParams()["id"];
         $retorno = Producto::Borrar($id);
@@ -67,6 +83,10 @@ class ProductoController{
         return $response->withHeader('Content-Type', 'application/json');
     }
    
+    /**
+     * Entra los datos mas importantes por PUT y se modifican en la base de datos
+     * con su ID respectiva
+     */
     public function ModificarUno($request, $response, $args){
         $parametros = $request->getParsedBody();
         $producto = new Producto();
@@ -90,6 +110,27 @@ class ProductoController{
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    /* 
+    Maneja el CSV pasado por POST y lo Insertar en la base de datos 
+    */
+    public function SubirCSV($request, $response, $args){
+        $file = $request->getUploadedFiles()["csv"];
+        $retorno = Archivos::CSVBaseDatos($file,array("Producto","Instanciar"));
+        if($retorno){
+            $payload = json_encode(array("Exito" => "Exito al cargar los usuarios a la BD"));
+            $response->withStatus(200,"Exito");
+            $response->getBody()->write($payload);  
+        }else{
+            $payload = json_encode(array("Error" => "ERROR al subir los datos al BD"));
+            $response->withStatus(404,"Error");
+            $response->getBody()->write($payload);    
+        }
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    /**
+     * Entra por POST con los datos del nuevo empleado que se inserta a la base de datos
+     */
     public function CargarUno($request, $response, $args){
         $parametros = $request->getParsedBody();
 

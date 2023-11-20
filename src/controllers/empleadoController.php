@@ -47,9 +47,10 @@ class UsuarioController implements IApiUsable
         return $response->withHeader('Content-Type', 'application/json');
     }
 
-    /* 
-    Obtiene los datos de la base de datos de la respectiva entidad y la convierte en un CSV
-    */
+    /**
+     * Descarga la informacion del bd Mesa a un csv y lo entrega por el body
+     * 'USAR en postman la opcion "send and download" para obtener el archivo'
+     */
     public function Descargar($request, $response, $args){
         /* Primer argumento es un callback, en este caso llama al metodo estatico ObtenerTodos de la clase
            Empleado, segundo argumento los nombres de las columnas que seran el primer renglon del CSV  

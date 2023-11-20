@@ -14,6 +14,12 @@ class Encuesta{
         $this->comentario = $comentario;
     }
 
+    /**
+     * Obtiene todas las encuestas ordenadas por las mejores puntuaciones de la bd 'encuestas'
+     * 
+     * @return stdClass
+     * Retorna las clases de de las puntuaciones
+     */
     public static function MejoresPuntuaciones(){
         $db = AccesoDatos::ObjetoInstancia();
         $consulta = $db->prepararConsulta("SELECT puntuacion, comentario 
@@ -22,6 +28,12 @@ class Encuesta{
         return $consulta->fetchAll(PDO::FETCH_CLASS, "stdClass");
     }
 
+    /**
+     * Agrega las encuestas a la bd con sus respectivos datos
+     * 
+     * @return int
+     * retorna el ultimo id agregado
+     */
     public function Insertar(){
         $db = AccesoDatos::ObjetoInstancia();
         $consulta = $db->prepararConsulta("INSERT INTO encuesta ( alfanumerico, id_mesa, puntuacion, comentario) 

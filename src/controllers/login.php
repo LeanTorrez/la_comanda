@@ -4,6 +4,10 @@ include_once __DIR__."/../entidades/empleado.php";
 
 class Loggin{
 
+    /**
+     * POST entra los datos del usuario y se comparan con los existentes en la bd,
+     * si existe se crea un JWT con sus datos id,nombre y rol
+     */
     public function Login($request, $response, $args){
         $parametros = $request->getParsedBody();
         $email = $parametros["email"];
